@@ -4,6 +4,10 @@ import * as fs from 'fs';
 import { Telegraf } from 'telegraf';
 import { telegram } from './bot';
 
+// TODO
+// User Profile
+// Wait for anonther Function
+
 const main = async () => {
   const { botToken, email, password } = JSON.parse(
     fs.readFileSync('./profile.json', {
