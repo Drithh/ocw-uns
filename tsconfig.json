@@ -7,8 +7,5 @@
         "preserveConstEnums": true,
         "sourceMap": true,
         "outDir": "src",
-        // "rootDir": "./dist"
     },
-    // "include": ["src/*"],
-    // "exclude": ["node_modules", "dist/*"]
 }

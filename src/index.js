@@ -48,7 +48,10 @@ var main = function () { return __awaiter(void 0, void 0, void 0, function () {
                     encoding: 'utf8',
                     flag: 'r'
                 })), email = _a.email, password = _a.password;
-                return [4, puppeteer.launch({ headless: true })];
+                return [4, puppeteer.launch({
+                        headless: true,
+                        args: ['--no-sandbox']
+                    })];
             case 1:
                 browser = _b.sent();
                 return [4, browser.newPage()];
