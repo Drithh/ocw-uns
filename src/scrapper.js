@@ -36,46 +36,60 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.listAlpha = exports.login = void 0;
+exports.listAlpha = exports.countAlpha = exports.login = void 0;
+var alphaCourseLinks = new Array();
 var login = function (page, email, password) { return __awaiter(void 0, void 0, void 0, function () {
+    var e1_1, e2_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0:
-                console.log('Mencoba Login');
-                return [4, page.goto('https://ocw.uns.ac.id/saml/login')];
+            case 0: return [4, page.goto('https://ocw.uns.ac.id/saml/login', {
+                    waitUntil: 'networkidle2'
+                })];
             case 1:
                 _a.sent();
-                return [4, page.waitForSelector('.login-box')];
+                _a.label = 2;
             case 2:
-                _a.sent();
-                return [4, page.type('input.form-control[type="text"]', email)];
+                _a.trys.push([2, 4, , 9]);
+                return [4, page.waitForSelector('.login-box', { timeout: 3000 })];
             case 3:
                 _a.sent();
-                return [4, page.type('input.form-control[type="password"]', password)];
+                return [3, 9];
             case 4:
+                e1_1 = _a.sent();
+                _a.label = 5;
+            case 5:
+                _a.trys.push([5, 7, , 8]);
+                return [4, page.waitForSelector('.ti-user', { timeout: 1000 })];
+            case 6:
+                _a.sent();
+                return [2, 1];
+            case 7:
+                e2_1 = _a.sent();
+                return [2, 0];
+            case 8: return [3, 9];
+            case 9: return [4, page.type('input.form-control[type="text"]', email)];
+            case 10:
+                _a.sent();
+                return [4, page.type('input.form-control[type="password"]', password)];
+            case 11:
                 _a.sent();
                 return [4, page.click('.btn-flat')];
-            case 5:
+            case 12:
                 _a.sent();
-                return [2, page];
+                return [2, 1];
         }
     });
 }); };
 exports.login = login;
-var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, function () {
-    var courses, alphaCourses, myCourses, alphaCourseLinks, _loop_1, _i, alphaCourseLinks_1, alphaCourseLink;
+var countAlpha = function (page) { return __awaiter(void 0, void 0, void 0, function () {
+    var courses, alphaCourses, myCourses;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0:
-                console.log('Mengecek Mata Kuliah Yang Alpha');
-                return [4, page.waitForSelector('.wrapper')];
+            case 0: return [4, page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail')];
             case 1:
                 _a.sent();
-                return [4, page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail')];
-            case 2:
-                _a.sent();
                 return [4, page.waitForSelector('.wrapper')];
-            case 3:
+            case 2:
                 _a.sent();
                 return [4, page.evaluate(function () {
                         var rows = document.querySelectorAll('table tr');
@@ -84,7 +98,7 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                             return Array.from(columns, function (column) { return column.innerText; });
                         });
                     })];
-            case 4:
+            case 3:
                 courses = _a.sent();
                 courses.shift();
                 courses.pop();
@@ -99,7 +113,7 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                             return [item, [LinkCourses[i]]];
                         });
                     })];
-            case 5:
+            case 4:
                 myCourses = _a.sent();
                 alphaCourseLinks = new Array();
                 myCourses.forEach(function (myCourse) {
@@ -109,14 +123,22 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                         }
                     });
                 });
-                console.log('Terdapat ' + alphaCourseLinks.length + ' Alpha');
+                return [2, alphaCourseLinks.length];
+        }
+    });
+}); };
+exports.countAlpha = countAlpha;
+var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, function () {
+    var messaageStrings, _loop_1, _i, alphaCourseLinks_1, alphaCourseLink;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                messaageStrings = new Array();
                 _loop_1 = function (alphaCourseLink) {
                     var currentTime, courseSchedules, Messages;
                     return __generator(this, function (_b) {
                         switch (_b.label) {
-                            case 0:
-                                console.log('Mengecek Apakah Kamu Benaran Alpha...');
-                                return [4, page.goto(String(alphaCourseLink[1]))];
+                            case 0: return [4, page.goto(String(alphaCourseLink[1]))];
                             case 1:
                                 _b.sent();
                                 return [4, page.waitForSelector('#clock')];
@@ -159,7 +181,7 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                                 ];
                                 courseSchedules.forEach(function (courseSchedule) {
                                     var courseName = courseSchedule[0], _a = courseSchedule[1], courseStartTime = _a[0], courseEndTime = _a[1];
-                                    console.log(Messages[currentTime > courseStartTime && currentTime < courseEndTime
+                                    messaageStrings.push(Messages[currentTime > courseStartTime && currentTime < courseEndTime
                                         ? 0
                                         : currentTime < courseStartTime
                                             ? 1
@@ -175,18 +197,18 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                     });
                 };
                 _i = 0, alphaCourseLinks_1 = alphaCourseLinks;
-                _a.label = 6;
-            case 6:
-                if (!(_i < alphaCourseLinks_1.length)) return [3, 9];
+                _a.label = 1;
+            case 1:
+                if (!(_i < alphaCourseLinks_1.length)) return [3, 4];
                 alphaCourseLink = alphaCourseLinks_1[_i];
                 return [5, _loop_1(alphaCourseLink)];
-            case 7:
+            case 2:
                 _a.sent();
-                _a.label = 8;
-            case 8:
+                _a.label = 3;
+            case 3:
                 _i++;
-                return [3, 6];
-            case 9: return [2];
+                return [3, 1];
+            case 4: return [2, messaageStrings];
         }
     });
 }); };

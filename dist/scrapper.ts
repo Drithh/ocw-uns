@@ -1,25 +1,35 @@
 import * as puppeteer from 'puppeteer';
 
+var alphaCourseLinks: (string | string[])[][] = new Array();
+
 export const login = async (
   page: puppeteer.Page,
   email: string,
   password: string
 ) => {
   // Login
-  console.log('Mencoba Login');
-  await page.goto('https://ocw.uns.ac.id/saml/login');
-  await page.waitForSelector('.login-box');
+
+  await page.goto('https://ocw.uns.ac.id/saml/login', {
+    waitUntil: 'networkidle2',
+  });
+  try {
+    await page.waitForSelector('.login-box', { timeout: 3000 });
+  } catch (e1) {
+    try {
+      await page.waitForSelector('.ti-user', { timeout: 1000 });
+      return 1;
+    } catch (e2) {
+      return 0;
+    }
+  }
+
   await page.type('input.form-control[type="text"]', email);
   await page.type('input.form-control[type="password"]', password);
   await page.click('.btn-flat');
-
-  return page;
+  return 1;
 };
 
-export const listAlpha = async (page: puppeteer.Page) => {
-  // Check Alpha
-  console.log('Mengecek Mata Kuliah Yang Alpha');
-  await page.waitForSelector('.wrapper');
+export const countAlpha = async (page: puppeteer.Page) => {
   await page.goto(
     'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
   );
@@ -67,9 +77,7 @@ export const listAlpha = async (page: puppeteer.Page) => {
     });
   });
 
-  // console.log(myCourses);
-
-  var alphaCourseLinks: (string | string[])[][] = new Array();
+  alphaCourseLinks = new Array();
   myCourses.forEach((myCourse: (string | string[])[]) => {
     alphaCourses.forEach((alphaCourse: string[]) => {
       if (String(myCourse[0]).match(alphaCourse[1])) {
@@ -78,12 +86,12 @@ export const listAlpha = async (page: puppeteer.Page) => {
     });
   });
 
-  console.log('Terdapat ' + alphaCourseLinks.length + ' Alpha');
+  return alphaCourseLinks.length;
+};
 
-  // Check Time
+export const listAlpha = async (page: puppeteer.Page) => {
+  const messaageStrings: string[] = new Array();
   for (const alphaCourseLink of alphaCourseLinks) {
-    console.log('Mengecek Apakah Kamu Benaran Alpha...');
-    // console.log(alphaCourseLink);
     await page.goto(String(alphaCourseLink[1]));
     await page.waitForSelector('#clock');
 
@@ -129,7 +137,7 @@ export const listAlpha = async (page: puppeteer.Page) => {
     ];
     courseSchedules.forEach((courseSchedule: any) => {
       const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
-      console.log(
+      messaageStrings.push(
         Messages[
           currentTime > courseStartTime && currentTime < courseEndTime
             ? 0
@@ -145,4 +153,5 @@ export const listAlpha = async (page: puppeteer.Page) => {
       );
     });
   }
+  return messaageStrings;
 };

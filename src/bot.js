@@ -36,44 +36,48 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var puppeteer = require("puppeteer");
-var fs = require("fs");
-var telegraf_1 = require("telegraf");
-var bot_1 = require("./bot");
-var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, botToken, email, password, browser, browserVersion, page;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0:
-                _a = JSON.parse(fs.readFileSync('./profile.json', {
-                    encoding: 'utf8',
-                    flag: 'r'
-                })), botToken = _a.botToken, email = _a.email, password = _a.password;
-                return [4, puppeteer.launch({
-                        headless: true,
-                        userDataDir: './cache',
-                        args: [
-                            '--no-sandbox',
-                            '--disable-setuid-sandbox',
-                            '--disable-dev-shm-usage',
-                            '--disable-gpu',
-                        ]
-                    })];
-            case 1:
-                browser = _b.sent();
-                return [4, browser.version()];
-            case 2:
-                browserVersion = _b.sent();
-                console.log("Started " + browserVersion);
-                return [4, browser.newPage()];
-            case 3:
-                page = _b.sent();
-                return [4, (0, bot_1.telegram)(new telegraf_1.Telegraf(botToken), page, email, password)];
-            case 4:
-                _b.sent();
-                return [2];
-        }
+exports.telegram = void 0;
+var scrapper_1 = require("./scrapper");
+var telegram = function (bot, page, email, password) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        bot.hears('/login', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+            var success;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        ctx.reply('Mencoba login ' + email);
+                        return [4, (0, scrapper_1.login)(page, email, password)];
+                    case 1:
+                        success = _a.sent();
+                        ctx.reply(success ? 'Login Berhasil' : 'Login Gagal');
+                        return [2];
+                }
+            });
+        }); });
+        bot.hears('/listAlpha', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+            var count, messaageStrings;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        ctx.reply('Mengecek Mata Kuliah Yang Alpha');
+                        return [4, (0, scrapper_1.countAlpha)(page)];
+                    case 1:
+                        count = _a.sent();
+                        ctx.reply('Terdapat ' + count + ' Alpha');
+                        ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
+                        return [4, (0, scrapper_1.listAlpha)(page)];
+                    case 2:
+                        messaageStrings = _a.sent();
+                        messaageStrings.forEach(function (messaageString) {
+                            ctx.reply(messaageString);
+                        });
+                        return [2];
+                }
+            });
+        }); });
+        bot.launch();
+        return [2];
     });
 }); };
-main();
-//# sourceMappingURL=index.js.map
+exports.telegram = telegram;
+//# sourceMappingURL=bot.js.map
