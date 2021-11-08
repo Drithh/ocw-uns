@@ -36,18 +36,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.listAlpha = exports.absen = exports.countAlpha = exports.login = void 0;
+exports.absent = exports.listAlpha = exports.absen = exports.countAlpha = exports.login = void 0;
 var alphaCourseLinks = new Array();
-var login = function (page, email, password) { return __awaiter(void 0, void 0, void 0, function () {
+var page;
+var login = function (pageOCW, email, password) { return __awaiter(void 0, void 0, void 0, function () {
     var response;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4, page.goto('https://ocw.uns.ac.id/saml/login', {
-                    waitUntil: 'networkidle2'
-                })];
+            case 0:
+                page = pageOCW;
+                return [4, page.goto('https://ocw.uns.ac.id/saml/login', {
+                        waitUntil: 'networkidle2'
+                    })];
             case 1:
                 response = _a.sent();
-                if (!response.request().redirectChain().at(0).url().match('login')) return [3, 5];
+                if (!response.request().redirectChain()[0].url().match('login')) return [3, 5];
                 return [4, page.type('input.form-control[type="text"]', email)];
             case 2:
                 _a.sent();
@@ -63,7 +66,7 @@ var login = function (page, email, password) { return __awaiter(void 0, void 0, 
     });
 }); };
 exports.login = login;
-var countAlpha = function (page) { return __awaiter(void 0, void 0, void 0, function () {
+var countAlpha = function () { return __awaiter(void 0, void 0, void 0, function () {
     var courses, alphaCourses, myCourses;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -110,7 +113,7 @@ var countAlpha = function (page) { return __awaiter(void 0, void 0, void 0, func
     });
 }); };
 exports.countAlpha = countAlpha;
-var absen = function (page) { return __awaiter(void 0, void 0, void 0, function () {
+var absen = function () { return __awaiter(void 0, void 0, void 0, function () {
     var courses;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -134,7 +137,7 @@ var absen = function (page) { return __awaiter(void 0, void 0, void 0, function 
     });
 }); };
 exports.absen = absen;
-var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, function () {
+var listAlpha = function () { return __awaiter(void 0, void 0, void 0, function () {
     var messaageStrings, _loop_1, _i, alphaCourseLinks_1, alphaCourseLink;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -184,7 +187,6 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                                 console.log(currentTime);
                                 courseSchedules.forEach(function (courseSchedule) {
                                     var courseName = courseSchedule[0], _a = courseSchedule[1], courseStartTime = _a[0], courseEndTime = _a[1];
-                                    console.log(courseSchedule);
                                     messaageStrings.push(Messages[currentTime > courseStartTime && currentTime < courseEndTime
                                         ? 0
                                         : currentTime < courseStartTime
@@ -217,4 +219,29 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
     });
 }); };
 exports.listAlpha = listAlpha;
+var absent = function (linkAbsent, page) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4, page.goto(linkAbsent, {
+                    waitUntil: 'networkidle2'
+                })];
+            case 1:
+                _a.sent();
+                return [4, page.setGeolocation({
+                        latitude: -7.7049,
+                        longitude: 110.6019
+                    })];
+            case 2:
+                _a.sent();
+                return [4, page.click('li button.btn-default')];
+            case 3:
+                _a.sent();
+                return [4, page.click('button#submit-lakukan-presensi')];
+            case 4:
+                _a.sent();
+                return [2];
+        }
+    });
+}); };
+exports.absent = absent;
 //# sourceMappingURL=scrapper.js.map

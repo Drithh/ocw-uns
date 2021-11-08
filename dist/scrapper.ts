@@ -1,20 +1,21 @@
 import * as puppeteer from 'puppeteer';
 
 var alphaCourseLinks: (string | string[])[][] = new Array();
+var page: puppeteer.Page;
 
 export const login = async (
-  page: puppeteer.Page,
+  pageOCW: puppeteer.Page,
   email: string,
   password: string
 ) => {
   // Login
-
+  page = pageOCW;
   const response = await page.goto('https://ocw.uns.ac.id/saml/login', {
     waitUntil: 'networkidle2',
   });
 
   // Ketika Belum Login
-  if (response.request().redirectChain().at(0).url().match('login')) {
+  if (response.request().redirectChain()[0].url().match('login')) {
     await page.type('input.form-control[type="text"]', email);
     await page.type('input.form-control[type="password"]', password);
     await page.click('.btn-flat');
@@ -22,7 +23,7 @@ export const login = async (
   return 1;
 };
 
-export const countAlpha = async (page: puppeteer.Page) => {
+export const countAlpha = async () => {
   await page.goto(
     'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
   );
@@ -82,7 +83,7 @@ export const countAlpha = async (page: puppeteer.Page) => {
   return alphaCourseLinks.length;
 };
 
-export const absen = async (page: puppeteer.Page) => {
+export const absen = async () => {
   await page.goto(
     'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
   );
@@ -96,7 +97,7 @@ export const absen = async (page: puppeteer.Page) => {
   });
 };
 
-export const listAlpha = async (page: puppeteer.Page) => {
+export const listAlpha = async () => {
   const messaageStrings: string[] = new Array();
   for (const alphaCourseLink of alphaCourseLinks) {
     await page.goto(String(alphaCourseLink[1]));
@@ -143,7 +144,6 @@ export const listAlpha = async (page: puppeteer.Page) => {
     console.log(currentTime);
     courseSchedules.forEach((courseSchedule: any) => {
       const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
-      console.log(courseSchedule);
       messaageStrings.push(
         Messages[
           currentTime > courseStartTime && currentTime < courseEndTime
@@ -161,4 +161,18 @@ export const listAlpha = async (page: puppeteer.Page) => {
     });
   }
   return messaageStrings;
+};
+
+export const absent = async (linkAbsent: string, page: puppeteer.Page) => {
+  await page.goto(linkAbsent, {
+    waitUntil: 'networkidle2',
+  });
+
+  await page.setGeolocation({
+    latitude: -7.7049,
+    longitude: 110.6019,
+  });
+
+  await page.click('li button.btn-default');
+  await page.click('button#submit-lakukan-presensi');
 };

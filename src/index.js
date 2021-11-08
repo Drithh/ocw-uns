@@ -37,41 +37,53 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var puppeteer = require("puppeteer");
-var fs = require("fs");
-var scrapper_1 = require("./scrapper");
+var file_1 = require("./file");
+var telegraf_1 = require("telegraf");
+var bot_1 = require("./bot");
 var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, botToken, email, password, browser, browserVersion, page, success;
+    var _a, botToken, email, password, browser, page;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                _a = JSON.parse(fs.readFileSync('./profile.json', {
-                    encoding: 'utf8',
-                    flag: 'r'
-                })), botToken = _a.botToken, email = _a.email, password = _a.password;
-                return [4, puppeteer.launch({
-                        headless: false,
-                        userDataDir: './cache',
-                        args: [
-                            '--no-sandbox',
-                            '--disable-setuid-sandbox',
-                            '--disable-dev-shm-usage',
-                            '--disable-gpu',
-                        ]
-                    })];
+                _a = (0, file_1.readProfile)(), botToken = _a.botToken, email = _a.email, password = _a.password;
+                return [4, setupBrowser()];
             case 1:
                 browser = _b.sent();
-                return [4, browser.version()];
-            case 2:
-                browserVersion = _b.sent();
-                console.log("Started " + browserVersion);
                 return [4, browser.newPage()];
-            case 3:
+            case 2:
                 page = _b.sent();
-                return [4, (0, scrapper_1.login)(page, email, password)];
-            case 4:
-                success = _b.sent();
-                console.log(success);
+                (0, bot_1.telegram)(new telegraf_1.Telegraf(botToken), page, email, password);
+                console.log('asdass');
                 return [2];
+        }
+    });
+}); };
+var setupBrowser = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var browser, browserVersion;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4, puppeteer.launch({
+                    headless: true,
+                    userDataDir: './cache',
+                    args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                    ]
+                })];
+            case 1:
+                browser = _a.sent();
+                return [4, browser
+                        .defaultBrowserContext()
+                        .overridePermissions('https://ocw.uns.ac.id', ['geolocation'])];
+            case 2:
+                _a.sent();
+                return [4, browser.version()];
+            case 3:
+                browserVersion = _a.sent();
+                console.log("Started " + browserVersion);
+                return [2, browser];
         }
     });
 }); };
