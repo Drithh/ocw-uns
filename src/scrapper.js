@@ -36,47 +36,29 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.listAlpha = exports.countAlpha = exports.login = void 0;
+exports.listAlpha = exports.absen = exports.countAlpha = exports.login = void 0;
 var alphaCourseLinks = new Array();
 var login = function (page, email, password) { return __awaiter(void 0, void 0, void 0, function () {
-    var e1_1, e2_1;
+    var response;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4, page.goto('https://ocw.uns.ac.id/saml/login', {
                     waitUntil: 'networkidle2'
                 })];
             case 1:
-                _a.sent();
-                _a.label = 2;
+                response = _a.sent();
+                if (!response.request().redirectChain().at(0).url().match('login')) return [3, 5];
+                return [4, page.type('input.form-control[type="text"]', email)];
             case 2:
-                _a.trys.push([2, 4, , 9]);
-                return [4, page.waitForSelector('.login-box', { timeout: 3000 })];
-            case 3:
-                _a.sent();
-                return [3, 9];
-            case 4:
-                e1_1 = _a.sent();
-                _a.label = 5;
-            case 5:
-                _a.trys.push([5, 7, , 8]);
-                return [4, page.waitForSelector('.ti-user', { timeout: 1000 })];
-            case 6:
-                _a.sent();
-                return [2, 1];
-            case 7:
-                e2_1 = _a.sent();
-                return [2, 0];
-            case 8: return [3, 9];
-            case 9: return [4, page.type('input.form-control[type="text"]', email)];
-            case 10:
                 _a.sent();
                 return [4, page.type('input.form-control[type="password"]', password)];
-            case 11:
+            case 3:
                 _a.sent();
                 return [4, page.click('.btn-flat')];
-            case 12:
+            case 4:
                 _a.sent();
-                return [2, 1];
+                _a.label = 5;
+            case 5: return [2, 1];
         }
     });
 }); };
@@ -128,6 +110,30 @@ var countAlpha = function (page) { return __awaiter(void 0, void 0, void 0, func
     });
 }); };
 exports.countAlpha = countAlpha;
+var absen = function (page) { return __awaiter(void 0, void 0, void 0, function () {
+    var courses;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4, page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail')];
+            case 1:
+                _a.sent();
+                return [4, page.waitForSelector('.wrapper')];
+            case 2:
+                _a.sent();
+                return [4, page.evaluate(function () {
+                        var rows = document.querySelectorAll('panel-default');
+                        return Array.from(rows, function (row) {
+                            var columns = row.querySelectorAll('td');
+                            return Array.from(columns, function (column) { return column.innerText; });
+                        });
+                    })];
+            case 3:
+                courses = _a.sent();
+                return [2];
+        }
+    });
+}); };
+exports.absen = absen;
 var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, function () {
     var messaageStrings, _loop_1, _i, alphaCourseLinks_1, alphaCourseLink;
     return __generator(this, function (_a) {
@@ -144,11 +150,7 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                                 return [4, page.waitForSelector('#clock')];
                             case 2:
                                 _b.sent();
-                                return [4, page.evaluate(function () {
-                                        return Date.parse(document.querySelector('#clock').innerHTML + ' GMT+7');
-                                    })];
-                            case 3:
-                                currentTime = _b.sent();
+                                currentTime = new Date().getTime();
                                 return [4, page.evaluate(function () {
                                         var listAbsents = Array.from(document.querySelectorAll('.col-md-6 .panel-body'));
                                         listAbsents = listAbsents.filter(function (listAbsent) {
@@ -172,15 +174,17 @@ var listAlpha = function (page) { return __awaiter(void 0, void 0, void 0, funct
                                             return [item, schedules[i]];
                                         });
                                     })];
-                            case 4:
+                            case 3:
                                 courseSchedules = _b.sent();
                                 Messages = [
                                     'Kuliah Sedang Berjalan ',
                                     'Kuliah Belum Dimulai ',
                                     'Kuliah Sudah Selesai ',
                                 ];
+                                console.log(currentTime);
                                 courseSchedules.forEach(function (courseSchedule) {
                                     var courseName = courseSchedule[0], _a = courseSchedule[1], courseStartTime = _a[0], courseEndTime = _a[1];
+                                    console.log(courseSchedule);
                                     messaageStrings.push(Messages[currentTime > courseStartTime && currentTime < courseEndTime
                                         ? 0
                                         : currentTime < courseStartTime

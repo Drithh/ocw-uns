@@ -8,13 +8,13 @@ export const telegram = async (
   email: string,
   password: string
 ) => {
-  bot.hears('/login', async (ctx) => {
+  await bot.hears('/login', async (ctx) => {
     ctx.reply('Mencoba login ' + email);
     const success = await login(page, email, password);
     ctx.reply(success ? 'Login Berhasil' : 'Login Gagal');
   });
 
-  bot.hears('/listAlpha', async (ctx) => {
+  await bot.hears('/listAlpha', async (ctx) => {
     ctx.reply('Mengecek Mata Kuliah Yang Alpha');
     const count = await countAlpha(page);
     ctx.reply('Terdapat ' + count + ' Alpha');

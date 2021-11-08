@@ -9,23 +9,16 @@ export const login = async (
 ) => {
   // Login
 
-  await page.goto('https://ocw.uns.ac.id/saml/login', {
+  const response = await page.goto('https://ocw.uns.ac.id/saml/login', {
     waitUntil: 'networkidle2',
   });
-  try {
-    await page.waitForSelector('.login-box', { timeout: 3000 });
-  } catch (e1) {
-    try {
-      await page.waitForSelector('.ti-user', { timeout: 1000 });
-      return 1;
-    } catch (e2) {
-      return 0;
-    }
-  }
 
-  await page.type('input.form-control[type="text"]', email);
-  await page.type('input.form-control[type="password"]', password);
-  await page.click('.btn-flat');
+  // Ketika Belum Login
+  if (response.request().redirectChain().at(0).url().match('login')) {
+    await page.type('input.form-control[type="text"]', email);
+    await page.type('input.form-control[type="password"]', password);
+    await page.click('.btn-flat');
+  }
   return 1;
 };
 
@@ -89,15 +82,27 @@ export const countAlpha = async (page: puppeteer.Page) => {
   return alphaCourseLinks.length;
 };
 
+export const absen = async (page: puppeteer.Page) => {
+  await page.goto(
+    'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
+  );
+  await page.waitForSelector('.wrapper');
+  const courses = await page.evaluate(() => {
+    const rows = document.querySelectorAll('panel-default');
+    return Array.from(rows, (row) => {
+      const columns = row.querySelectorAll('td');
+      return Array.from(columns, (column) => column.innerText);
+    });
+  });
+};
+
 export const listAlpha = async (page: puppeteer.Page) => {
   const messaageStrings: string[] = new Array();
   for (const alphaCourseLink of alphaCourseLinks) {
     await page.goto(String(alphaCourseLink[1]));
     await page.waitForSelector('#clock');
 
-    const currentTime = await page.evaluate(() => {
-      return Date.parse(document.querySelector('#clock').innerHTML + ' GMT+7');
-    });
+    const currentTime = new Date().getTime();
 
     const courseSchedules = await page.evaluate(() => {
       let listAbsents = Array.from(
@@ -135,8 +140,10 @@ export const listAlpha = async (page: puppeteer.Page) => {
       'Kuliah Belum Dimulai ',
       'Kuliah Sudah Selesai ',
     ];
+    console.log(currentTime);
     courseSchedules.forEach((courseSchedule: any) => {
       const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
+      console.log(courseSchedule);
       messaageStrings.push(
         Messages[
           currentTime > courseStartTime && currentTime < courseEndTime

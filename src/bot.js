@@ -40,43 +40,49 @@ exports.telegram = void 0;
 var scrapper_1 = require("./scrapper");
 var telegram = function (bot, page, email, password) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        bot.hears('/login', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
-            var success;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        ctx.reply('Mencoba login ' + email);
-                        return [4, (0, scrapper_1.login)(page, email, password)];
-                    case 1:
-                        success = _a.sent();
-                        ctx.reply(success ? 'Login Berhasil' : 'Login Gagal');
-                        return [2];
-                }
-            });
-        }); });
-        bot.hears('/listAlpha', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
-            var count, messaageStrings;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        ctx.reply('Mengecek Mata Kuliah Yang Alpha');
-                        return [4, (0, scrapper_1.countAlpha)(page)];
-                    case 1:
-                        count = _a.sent();
-                        ctx.reply('Terdapat ' + count + ' Alpha');
-                        ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
-                        return [4, (0, scrapper_1.listAlpha)(page)];
-                    case 2:
-                        messaageStrings = _a.sent();
-                        messaageStrings.forEach(function (messaageString) {
-                            ctx.reply(messaageString);
+        switch (_a.label) {
+            case 0: return [4, bot.hears('/login', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+                    var success;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                ctx.reply('Mencoba login ' + email);
+                                return [4, (0, scrapper_1.login)(page, email, password)];
+                            case 1:
+                                success = _a.sent();
+                                ctx.reply(success ? 'Login Berhasil' : 'Login Gagal');
+                                return [2];
+                        }
+                    });
+                }); })];
+            case 1:
+                _a.sent();
+                return [4, bot.hears('/listAlpha', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+                        var count, messaageStrings;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    ctx.reply('Mengecek Mata Kuliah Yang Alpha');
+                                    return [4, (0, scrapper_1.countAlpha)(page)];
+                                case 1:
+                                    count = _a.sent();
+                                    ctx.reply('Terdapat ' + count + ' Alpha');
+                                    ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
+                                    return [4, (0, scrapper_1.listAlpha)(page)];
+                                case 2:
+                                    messaageStrings = _a.sent();
+                                    messaageStrings.forEach(function (messaageString) {
+                                        ctx.reply(messaageString);
+                                    });
+                                    return [2];
+                            }
                         });
-                        return [2];
-                }
-            });
-        }); });
-        bot.launch();
-        return [2];
+                    }); })];
+            case 2:
+                _a.sent();
+                bot.launch();
+                return [2];
+        }
     });
 }); };
 exports.telegram = telegram;

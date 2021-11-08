@@ -38,10 +38,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 var puppeteer = require("puppeteer");
 var fs = require("fs");
-var telegraf_1 = require("telegraf");
-var bot_1 = require("./bot");
+var scrapper_1 = require("./scrapper");
 var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, botToken, email, password, browser, browserVersion, page;
+    var _a, botToken, email, password, browser, browserVersion, page, success;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -50,7 +49,7 @@ var main = function () { return __awaiter(void 0, void 0, void 0, function () {
                     flag: 'r'
                 })), botToken = _a.botToken, email = _a.email, password = _a.password;
                 return [4, puppeteer.launch({
-                        headless: true,
+                        headless: false,
                         userDataDir: './cache',
                         args: [
                             '--no-sandbox',
@@ -68,9 +67,10 @@ var main = function () { return __awaiter(void 0, void 0, void 0, function () {
                 return [4, browser.newPage()];
             case 3:
                 page = _b.sent();
-                return [4, (0, bot_1.telegram)(new telegraf_1.Telegraf(botToken), page, email, password)];
+                return [4, (0, scrapper_1.login)(page, email, password)];
             case 4:
-                _b.sent();
+                success = _b.sent();
+                console.log(success);
                 return [2];
         }
     });
