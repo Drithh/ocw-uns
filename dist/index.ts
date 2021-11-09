@@ -1,21 +1,23 @@
 import * as puppeteer from 'puppeteer';
 import { login, listAlpha, countAlpha } from './scrapper';
-import { readProfile, writeProfile } from './file';
+import { File } from './file';
 
 import { Telegraf } from 'telegraf';
-import { telegram } from './bot';
+import { Bot } from './bot';
 
 // TODO
 // User Profile
 // Wait for anonther Function
 
 const main = async () => {
-  const { botToken, email, password } = readProfile();
+  let file: File = new File();
+  file.read();
+
   const browser: puppeteer.Browser = await setupBrowser();
 
   const page = await browser.newPage();
 
-  telegram(new Telegraf(botToken), page, email, password);
+  const bot: Bot = new Bot(new Telegraf(file.profile.botToken), file, page);
   // await browser.close();
 };
 

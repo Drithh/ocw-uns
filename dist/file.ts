@@ -1,25 +1,36 @@
 import * as fs from 'fs';
 
-export const readProfile = () => {
-  return JSON.parse(
-    fs.readFileSync('./profile.json', {
-      encoding: 'utf8',
-      flag: 'r',
-    })
-  );
-};
-
-export const writeProfile = (
-  botToken: string,
-  email: string,
-  password: string
-) => {
-  const profile = {
-    botToken: botToken,
-    email: email,
-    password: password,
+export class File {
+  public profile = {
+    botToken: '-',
+    email: '-',
+    password: '-',
   };
 
-  const jsonString = JSON.stringify(profile);
-  fs.writeFileSync('./profile.json', jsonString);
-};
+  public edit(botToken: string, email: string, password: string) {
+    if (botToken !== '-') {
+      this.profile.botToken = botToken;
+    }
+    if (email !== '-') {
+      this.profile.email = email;
+    }
+    if (password !== '-') {
+      this.profile.password = password;
+    }
+    this.write();
+  }
+
+  public read() {
+    return JSON.parse(
+      fs.readFileSync('./profile.json', {
+        encoding: 'utf8',
+        flag: 'r',
+      })
+    );
+  }
+
+  public write = () => {
+    const jsonString = JSON.stringify(this.profile);
+    fs.writeFileSync('./profile.json', jsonString);
+  };
+}

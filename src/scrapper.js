@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.absent = exports.listAlpha = exports.absen = exports.countAlpha = exports.login = void 0;
+exports.absent = exports.listAlpha = exports.countAlpha = exports.login = void 0;
 var alphaCourseLinks = new Array();
 var page;
 const login = (pageOCW, email, password) => __awaiter(void 0, void 0, void 0, function* () {
@@ -21,8 +21,11 @@ const login = (pageOCW, email, password) => __awaiter(void 0, void 0, void 0, fu
         yield page.type('input.form-control[type="text"]', email);
         yield page.type('input.form-control[type="password"]', password);
         yield page.click('.btn-flat');
+        return 'Login Berhasil';
     }
-    return 1;
+    else {
+        return 'Login Menggunakan Sesi Yang Sebelumnya';
+    }
 });
 exports.login = login;
 const countAlpha = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -57,18 +60,6 @@ const countAlpha = () => __awaiter(void 0, void 0, void 0, function* () {
     return alphaCourseLinks.length;
 });
 exports.countAlpha = countAlpha;
-const absen = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail');
-    yield page.waitForSelector('.wrapper');
-    const courses = yield page.evaluate(() => {
-        const rows = document.querySelectorAll('panel-default');
-        return Array.from(rows, (row) => {
-            const columns = row.querySelectorAll('td');
-            return Array.from(columns, (column) => column.innerText);
-        });
-    });
-});
-exports.absen = absen;
 const listAlpha = () => __awaiter(void 0, void 0, void 0, function* () {
     const messaageStrings = new Array();
     for (const alphaCourseLink of alphaCourseLinks) {
@@ -99,7 +90,7 @@ const listAlpha = () => __awaiter(void 0, void 0, void 0, function* () {
             'Kuliah Belum Dimulai ',
             'Kuliah Sudah Selesai ',
         ];
-        console.log(currentTime);
+        console.log(courseSchedules);
         courseSchedules.forEach((courseSchedule) => {
             const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
             messaageStrings.push(Messages[currentTime > courseStartTime && currentTime < courseEndTime

@@ -19,8 +19,10 @@ export const login = async (
     await page.type('input.form-control[type="text"]', email);
     await page.type('input.form-control[type="password"]', password);
     await page.click('.btn-flat');
+    return 'Login Berhasil';
+  } else {
+    return 'Login Menggunakan Sesi Yang Sebelumnya';
   }
-  return 1;
 };
 
 export const countAlpha = async () => {
@@ -83,20 +85,6 @@ export const countAlpha = async () => {
   return alphaCourseLinks.length;
 };
 
-export const absen = async () => {
-  await page.goto(
-    'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
-  );
-  await page.waitForSelector('.wrapper');
-  const courses = await page.evaluate(() => {
-    const rows = document.querySelectorAll('panel-default');
-    return Array.from(rows, (row) => {
-      const columns = row.querySelectorAll('td');
-      return Array.from(columns, (column) => column.innerText);
-    });
-  });
-};
-
 export const listAlpha = async () => {
   const messaageStrings: string[] = new Array();
   for (const alphaCourseLink of alphaCourseLinks) {
@@ -141,7 +129,7 @@ export const listAlpha = async () => {
       'Kuliah Belum Dimulai ',
       'Kuliah Sudah Selesai ',
     ];
-    console.log(currentTime);
+    console.log(courseSchedules);
     courseSchedules.forEach((courseSchedule: any) => {
       const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
       messaageStrings.push(

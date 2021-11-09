@@ -19,8 +19,8 @@ const telegram = (bot, page, email, password) => __awaiter(void 0, void 0, void 
     });
     bot.hears('Login', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
         ctx.reply('Mencoba login ' + email);
-        const success = yield (0, scrapper_1.login)(page, email, password);
-        ctx.reply(success ? 'Login Berhasil' : 'Login Gagal', mainMenuKeyboard);
+        const loginMessage = yield (0, scrapper_1.login)(page, email, password);
+        ctx.reply(loginMessage, mainMenuKeyboard);
     }));
     bot.hears('List Alpha', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
         ctx.reply('Mengecek Mata Kuliah Yang Alpha');
@@ -45,9 +45,6 @@ const telegram = (bot, page, email, password) => __awaiter(void 0, void 0, void 
     bot.hears('Edit Profile', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
         ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
     }));
-    bot.on('text', (ctx) => {
-        console.log('asdas');
-    });
     bot.launch();
 });
 exports.telegram = telegram;
@@ -58,19 +55,30 @@ const mainMenuKeyboard = telegraf_1.Markup.keyboard([
 ])
     .resize()
     .oneTime();
-const wizardScene = new telegraf_1.Scenes.WizardScene('CONTACT_DATA_WIZARD_SCENE_ID', (ctx) => {
-    ctx.reply('Masukkan Email');
+const wizardScene = new telegraf_1.Scenes.WizardScene('CONTACT_DATA_WIZARD_SCENE_ID', (ctx) => __awaiter(void 0, void 0, void 0, function* () {
+    yield ctx.reply("Jika tidak mau diubah masukan '-'");
+    yield ctx.reply('Masukkan Bot Token');
     ctx.wizard.state.contactData = {};
+    return ctx.wizard.next();
+}), (ctx) => {
+    ctx.wizard.state.contactData.botToken = ctx.message.text;
+    ctx.reply('Masukkan Email');
     return ctx.wizard.next();
 }, (ctx) => {
     ctx.wizard.state.contactData.email = ctx.message.text;
     ctx.reply('Masukkan Password');
     return ctx.wizard.next();
-}, (ctx) => __awaiter(void 0, void 0, void 0, function* () {
+}, (ctx) => {
     ctx.wizard.state.contactData.password = ctx.message.text;
     ctx.reply('Terima Kasih');
-    const { botToken } = (0, file_1.readProfile)();
-    (0, file_1.writeProfile)(botToken, ctx.wizard.state.contactData.email, ctx.wizard.state.contactData.password);
+    const { botToken, email, password } = (0, file_1.readProfile)();
+    (0, file_1.writeProfile)(ctx.wizard.state.contactData.botToken === '-'
+        ? botToken
+        : ctx.wizard.state.contactData.botToken, ctx.wizard.state.contactData.email === '-'
+        ? email
+        : ctx.wizard.state.contactData.email, ctx.wizard.state.contactData.password === '-'
+        ? password
+        : ctx.wizard.state.contactData.password);
     return ctx.scene.leave();
-}));
+});
 //# sourceMappingURL=bot.js.map
