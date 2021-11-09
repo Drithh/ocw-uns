@@ -1,11 +1,9 @@
 import { login, listAlpha, countAlpha } from './scrapper';
 import * as puppeteer from 'puppeteer';
-import { Telegraf, Context, Scenes } from 'telegraf';
+import { Telegraf, Scenes, Markup, session, Context } from 'telegraf';
+import { readProfile, writeProfile } from './file';
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-var messageId: number;
-var lockMessage: boolean;
+// const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const telegram = async (
   bot: Telegraf,
@@ -13,75 +11,77 @@ export const telegram = async (
   email: string,
   password: string
 ) => {
-  console.log('running');
-  // await bot.on('text', async (ctx) => {
-  //   console.log('start');
-  //   if (ctx.message.text === '/login') {
-  //     await delay(10000); /// waiting 1 second.
-  //     console.log('login');
-  //   }
-  //   if (ctx.message.text === '/absen') {
-  //     await delay(10000); /// waiting 1 second.
-  //     console.log('absen');
-  //   }
-  // });
   bot.command('start', (ctx) => {
-    commandList(bot, ctx);
+    ctx.reply('List Command', mainMenuKeyboard);
   });
 
-  bot.action('login', async (ctx) => {
-    lockMessage = false;
-    ctx.deleteMessage();
-    console.log('kenapa1');
-    await delay(10000);
-    console.log('selesai');
-    commandList(bot, ctx);
+  bot.hears('Login', async (ctx) => {
+    ctx.reply('Mencoba login ' + email);
+    const success = await login(page, email, password);
+    ctx.reply(success ? 'Login Berhasil' : 'Login Gagal', mainMenuKeyboard);
   });
 
-  bot.action('listalpha', async (ctx) => {
-    lockMessage = false;
-    ctx.deleteMessage();
-    console.log('kenapa2');
-    await delay(10000);
-    commandList(bot, ctx);
+  bot.hears('List Alpha', async (ctx) => {
+    ctx.reply('Mengecek Mata Kuliah Yang Alpha');
+    const count = await countAlpha();
+    ctx.reply('Terdapat ' + count + ' Alpha').then();
+    ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
+    const messaageStrings = await listAlpha();
+    messaageStrings.forEach((messaageString, key, messaageStrings) => {
+      if (Object.is(messaageStrings.length - 1, key)) {
+        ctx.reply(messaageString, mainMenuKeyboard);
+      } else {
+        ctx.reply(messaageString);
+      }
+    });
   });
 
-  // await bot.hears('/login', async (ctx) => {
-  //   ctx.reply('Mencoba login ' + email);
-  //   const success = await login(page, email, password);
-  //   ctx.reply(success ? 'Login Berhasil' : 'Login Gagal');
-  // });
-  // await bot.hears('/listAlpha', async (ctx) => {
-  //   ctx.reply('Mengecek Mata Kuliah Yang Alpha');
-  //   const count = await countAlpha();
-  //   ctx.reply('Terdapat ' + count + ' Alpha');
-  //   ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
-  //   const messaageStrings = await listAlpha();
-  //   messaageStrings.forEach((messaageString) => {
-  //     ctx.reply(messaageString);
-  //   });
-  // });
+  const stage: any = new Scenes.Stage([wizardScene], {
+    default: 'wizardScene',
+  });
+  bot.use(session()); // to  be precise, session is not a must have for Scenes to work, but it sure is lonely without one
+  bot.use(stage.middleware());
+
+  bot.hears('Edit Profile', async (ctx: any) => {
+    ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
+  });
+
+  bot.on('text', (ctx: any) => {
+    console.log('asdas');
+  });
+
   bot.launch();
 };
 
-const commandList = (bot: Telegraf, ctx: Context) => {
-  if (!lockMessage) {
-    lockMessage = true;
-    if (messageId) {
-      ctx.tg.deleteMessage(ctx.chat.id, messageId);
-      messageId = 0;
-    }
-    bot.telegram
-      .sendMessage(ctx.chat.id, 'List Command', {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: 'Login', callback_data: 'login' }],
-            [{ text: 'List Alpha', callback_data: 'listalpha' }],
-          ],
-        },
-      })
-      .then((m) => {
-        messageId = m.message_id;
-      });
+const mainMenuKeyboard = Markup.keyboard([
+  Markup.button.text('Login'),
+  Markup.button.text('List Alpha'),
+  Markup.button.text('Edit Profile'),
+])
+  .resize()
+  .oneTime();
+
+const wizardScene: any = new Scenes.WizardScene(
+  'CONTACT_DATA_WIZARD_SCENE_ID',
+  (ctx: any) => {
+    ctx.reply('Masukkan Email');
+    ctx.wizard.state.contactData = {};
+    return ctx.wizard.next();
+  },
+  (ctx: any) => {
+    ctx.wizard.state.contactData.email = ctx.message.text;
+    ctx.reply('Masukkan Password');
+    return ctx.wizard.next();
+  },
+  async (ctx) => {
+    ctx.wizard.state.contactData.password = ctx.message.text;
+    ctx.reply('Terima Kasih');
+    const { botToken } = readProfile();
+    writeProfile(
+      botToken,
+      ctx.wizard.state.contactData.email,
+      ctx.wizard.state.contactData.password
+    );
+    return ctx.scene.leave();
   }
-};
+);

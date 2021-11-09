@@ -14,12 +14,12 @@ export const writeProfile = (
   email: string,
   password: string
 ) => {
-  const customer = {
+  const profile = {
     botToken: botToken,
     email: email,
     password: password,
   };
 
-  const jsonString = JSON.stringify(customer);
+  const jsonString = JSON.stringify(profile);
   fs.writeFileSync('./profile.json', jsonString);
 };

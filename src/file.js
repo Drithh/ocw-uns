@@ -1,21 +1,21 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.writeProfile = exports.readProfile = void 0;
-var fs = require("fs");
-var readProfile = function () {
+const fs = require("fs");
+const readProfile = () => {
     return JSON.parse(fs.readFileSync('./profile.json', {
         encoding: 'utf8',
-        flag: 'r'
+        flag: 'r',
     }));
 };
 exports.readProfile = readProfile;
-var writeProfile = function (botToken, email, password) {
-    var customer = {
+const writeProfile = (botToken, email, password) => {
+    const profile = {
         botToken: botToken,
         email: email,
-        password: password
+        password: password,
     };
-    var jsonString = JSON.stringify(customer);
+    const jsonString = JSON.stringify(profile);
     fs.writeFileSync('./profile.json', jsonString);
 };
 exports.writeProfile = writeProfile;

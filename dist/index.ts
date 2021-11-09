@@ -16,7 +16,6 @@ const main = async () => {
   const page = await browser.newPage();
 
   telegram(new Telegraf(botToken), page, email, password);
-  console.log('asdass');
   // await browser.close();
 };
 
