@@ -1,5 +1,4 @@
 import * as puppeteer from 'puppeteer';
-import { login, listAlpha, countAlpha } from './scrapper';
 import { File } from './file';
 
 import { Telegraf } from 'telegraf';
@@ -17,7 +16,7 @@ const main = async () => {
 
   const page = await browser.newPage();
 
-  const bot: Bot = new Bot(new Telegraf(file.profile.botToken), file, page);
+  const bot: Bot = new Bot(file, page);
   // await browser.close();
 };
 

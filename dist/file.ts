@@ -21,7 +21,7 @@ export class File {
   }
 
   public read() {
-    return JSON.parse(
+    this.profile = JSON.parse(
       fs.readFileSync('./profile.json', {
         encoding: 'utf8',
         flag: 'r',

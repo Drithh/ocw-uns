@@ -1,155 +1,160 @@
 import * as puppeteer from 'puppeteer';
 
-var alphaCourseLinks: (string | string[])[][] = new Array();
-var page: puppeteer.Page;
+export class Scrapper {
+  private alphaCourseLinks: (string | string[])[][] = new Array();
 
-export const login = async (
-  pageOCW: puppeteer.Page,
-  email: string,
-  password: string
-) => {
-  // Login
-  page = pageOCW;
-  const response = await page.goto('https://ocw.uns.ac.id/saml/login', {
-    waitUntil: 'networkidle2',
-  });
+  constructor(
+    private page: puppeteer.Page,
+    private email: string,
+    private password: string
+  ) {}
 
-  // Ketika Belum Login
-  if (response.request().redirectChain()[0].url().match('login')) {
-    await page.type('input.form-control[type="text"]', email);
-    await page.type('input.form-control[type="password"]', password);
-    await page.click('.btn-flat');
-    return 'Login Berhasil';
-  } else {
-    return 'Login Menggunakan Sesi Yang Sebelumnya';
-  }
-};
-
-export const countAlpha = async () => {
-  await page.goto(
-    'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
-  );
-  await page.waitForSelector('.wrapper');
-
-  const courses = await page.evaluate(() => {
-    const rows = document.querySelectorAll('table tr');
-    return Array.from(rows, (row) => {
-      const columns = row.querySelectorAll('td');
-      return Array.from(columns, (column) => column.innerText);
+  public login = async () => {
+    const response = await this.page.goto('https://ocw.uns.ac.id/saml/login', {
+      waitUntil: 'networkidle2',
     });
-  });
 
-  courses.shift();
-  courses.pop();
-  const alphaCourses = courses.filter(
-    (course: string[]) => Number(course[4]) > 0
-  );
+    // Ketika Belum Login
+    if (response.request().redirectChain()[0].url().match('login')) {
+      await this.page.type('input.form-control[type="text"]', this.email);
+      await this.page.type(
+        'input.form-control[type="password"]',
+        this.password
+      );
+      await this.page.click('.btn-flat');
+      return 'Login Berhasil';
+    } else {
+      return 'Login Menggunakan Sesi Yang Sebelumnya';
+    }
+  };
 
-  // Check Tanggal Alpha
-  const myCourses = await page.evaluate(() => {
-    const listCourses = Array.from(
-      document.querySelectorAll('.daftar-makul a')
+  public countAlpha = async () => {
+    // await this.login();
+    await this.page.goto(
+      'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
     );
-    const NamaCourses = Array.from(
-      new Set(
-        Array.from(
-          listCourses,
-          (listCourse) => (listCourse as HTMLElement).innerText
-        )
-      )
-    );
-    const LinkCourses = Array.from(
-      new Set(
-        Array.from(
-          listCourses,
-          (listCourse) =>
-            'https://ocw.uns.ac.id/' + listCourse.getAttribute('href')
-        )
-      )
-    );
+    await this.page.waitForSelector('.wrapper');
 
-    return NamaCourses.map((item, i) => {
-      return [item, [LinkCourses[i]]];
-    });
-  });
-
-  alphaCourseLinks = new Array();
-  myCourses.forEach((myCourse: (string | string[])[]) => {
-    alphaCourses.forEach((alphaCourse: string[]) => {
-      if (String(myCourse[0]).match(alphaCourse[1])) {
-        alphaCourseLinks.push(myCourse);
-      }
-    });
-  });
-
-  return alphaCourseLinks.length;
-};
-
-export const listAlpha = async () => {
-  const messaageStrings: string[] = new Array();
-  for (const alphaCourseLink of alphaCourseLinks) {
-    await page.goto(String(alphaCourseLink[1]));
-    await page.waitForSelector('#clock');
-
-    const currentTime = new Date().getTime();
-
-    const courseSchedules = await page.evaluate(() => {
-      let listAbsents = Array.from(
-        document.querySelectorAll('.col-md-6 .panel-body')
-      );
-      listAbsents = listAbsents.filter((listAbsent) =>
-        listAbsent.querySelector('p:nth-of-type(4)').innerHTML.match('ALPHA')
-      );
-      const meeting = Array.from(
-        listAbsents,
-        (listAbsent) => listAbsent.querySelector('p').textContent
-      );
-      const dates = Array.from(listAbsents, (listAbsent) =>
-        listAbsent.querySelectorAll('small')
-      );
-      const schedules = Array.from(dates, (date) => {
-        const scheduleDate = date[0].innerHTML;
-        const [startTime, endTime] = date[1].innerHTML
-          .split(' ')
-          .filter((hour) => hour != '-');
-        return [
-          Date.parse(scheduleDate + ' ' + startTime + ' GMT+7'),
-          Date.parse(scheduleDate + ' ' + endTime + ' GMT+7'),
-        ];
-      });
-
-      return meeting.map((item, i) => {
-        return [item, schedules[i]];
+    const courses = await this.page.evaluate(() => {
+      const rows = document.querySelectorAll('table tr');
+      return Array.from(rows, (row) => {
+        const columns = row.querySelectorAll('td');
+        return Array.from(columns, (column) => column.innerText);
       });
     });
 
-    // Belum Absen
-    const Messages = [
-      'Kuliah Sedang Berjalan ',
-      'Kuliah Belum Dimulai ',
-      'Kuliah Sudah Selesai ',
-    ];
-    console.log(courseSchedules);
-    courseSchedules.forEach((courseSchedule: any) => {
-      const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
-      messaageStrings.push(
-        Messages[
-          currentTime > courseStartTime && currentTime < courseEndTime
-            ? 0
-            : currentTime < courseStartTime
-            ? 1
-            : 2
-        ] +
-          alphaCourseLink[0] +
-          ' ' +
-          courseName +
-          ' ' +
-          new Date(courseStartTime).toLocaleDateString('en-US')
+    courses.shift();
+    courses.pop();
+    const alphaCourses = courses.filter(
+      (course: string[]) => Number(course[4]) > 0
+    );
+
+    // Check Tanggal Alpha
+    const myCourses = await this.page.evaluate(() => {
+      const listCourses = Array.from(
+        document.querySelectorAll('.daftar-makul a')
       );
+      const NamaCourses = Array.from(
+        new Set(
+          Array.from(
+            listCourses,
+            (listCourse) => (listCourse as HTMLElement).innerText
+          )
+        )
+      );
+      const LinkCourses = Array.from(
+        new Set(
+          Array.from(
+            listCourses,
+            (listCourse) =>
+              'https://ocw.uns.ac.id/' + listCourse.getAttribute('href')
+          )
+        )
+      );
+
+      return NamaCourses.map((item, i) => {
+        return [item, [LinkCourses[i]]];
+      });
     });
-  }
-  return messaageStrings;
-};
+
+    this.alphaCourseLinks = new Array();
+    myCourses.forEach((myCourse: (string | string[])[]) => {
+      alphaCourses.forEach((alphaCourse: string[]) => {
+        if (String(myCourse[0]).match(alphaCourse[1])) {
+          this.alphaCourseLinks.push(myCourse);
+        }
+      });
+    });
+
+    return this.alphaCourseLinks.length;
+  };
+
+  public listAlpha = async () => {
+    const messaageStrings: string[] = new Array();
+    for (const alphaCourseLink of this.alphaCourseLinks) {
+      await this.page.goto(String(alphaCourseLink[1]));
+      await this.page.waitForSelector('#clock');
+
+      const currentTime = new Date().getTime();
+
+      const courseSchedules = await this.page.evaluate(() => {
+        let listAbsents = Array.from(
+          document.querySelectorAll('.col-md-6 .panel-body')
+        );
+        listAbsents = listAbsents.filter((listAbsent) =>
+          listAbsent.querySelector('p:nth-of-type(4)').innerHTML.match('ALPHA')
+        );
+        const meeting = Array.from(
+          listAbsents,
+          (listAbsent) => listAbsent.querySelector('p').textContent
+        );
+        const dates = Array.from(listAbsents, (listAbsent) =>
+          listAbsent.querySelectorAll('small')
+        );
+        const schedules = Array.from(dates, (date) => {
+          const scheduleDate = date[0].innerHTML;
+          const [startTime, endTime] = date[1].innerHTML
+            .split(' ')
+            .filter((hour) => hour != '-');
+          return [
+            Date.parse(scheduleDate + ' ' + startTime + ' GMT+7'),
+            Date.parse(scheduleDate + ' ' + endTime + ' GMT+7'),
+          ];
+        });
+
+        return meeting.map((item, i) => {
+          return [item, schedules[i]];
+        });
+      });
+
+      // Belum Absen
+      const Messages = [
+        'Kuliah Sedang Berjalan ',
+        'Kuliah Belum Dimulai ',
+        'Kuliah Sudah Selesai ',
+      ];
+      console.log(courseSchedules);
+      courseSchedules.forEach((courseSchedule: any) => {
+        const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
+        messaageStrings.push(
+          Messages[
+            currentTime > courseStartTime && currentTime < courseEndTime
+              ? 0
+              : currentTime < courseStartTime
+              ? 1
+              : 2
+          ] +
+            alphaCourseLink[0] +
+            ' ' +
+            courseName +
+            ' ' +
+            new Date(courseStartTime).toLocaleDateString('en-US')
+        );
+      });
+    }
+    return messaageStrings;
+  };
+}
 
 export const absent = async (linkAbsent: string, page: puppeteer.Page) => {
   await page.goto(linkAbsent, {

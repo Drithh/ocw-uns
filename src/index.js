@@ -11,13 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const puppeteer = require("puppeteer");
 const file_1 = require("./file");
-const telegraf_1 = require("telegraf");
 const bot_1 = require("./bot");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    const { botToken, email, password } = (0, file_1.readProfile)();
+    let file = new file_1.File();
+    file.read();
     const browser = yield setupBrowser();
     const page = yield browser.newPage();
-    (0, bot_1.telegram)(new telegraf_1.Telegraf(botToken), page, email, password);
+    const bot = new bot_1.Bot(file, page);
 });
 const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     const browser = yield puppeteer.launch({
