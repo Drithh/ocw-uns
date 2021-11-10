@@ -55,6 +55,10 @@ export class Bot {
 
     this.bot = new Telegraf(file.profile.botToken);
     this.bot.command('start', (ctx) => {
+      if (file.profile.chatId !== String(ctx.from.id)) {
+        file.profile.chatId = String(ctx.from.id);
+        file.write();
+      }
       ctx.reply('List Command', this.mainMenuKeyboard);
     });
 
@@ -103,6 +107,14 @@ export class Bot {
       ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
     });
 
-    this.bot.launch().then(() => {});
+    this.bot.launch().then(() => {
+      if (file.profile.chatId) {
+        this.bot.telegram.sendMessage(
+          file.profile.chatId,
+          'Senangnya Bisa Hidup Kembali :D',
+          this.mainMenuKeyboard
+        );
+      }
+    });
   }
 }

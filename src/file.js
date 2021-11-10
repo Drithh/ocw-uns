@@ -5,9 +5,10 @@ const fs = require("fs");
 class File {
     constructor() {
         this.profile = {
-            botToken: '-',
-            email: '-',
-            password: '-',
+            botToken: '',
+            chatId: '',
+            email: '',
+            password: '',
         };
         this.write = () => {
             const jsonString = JSON.stringify(this.profile);

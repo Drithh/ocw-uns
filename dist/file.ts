@@ -2,9 +2,10 @@ import * as fs from 'fs';
 
 export class File {
   public profile = {
-    botToken: '-',
-    email: '-',
-    password: '-',
+    botToken: '',
+    chatId: '',
+    email: '',
+    password: '',
   };
 
   public edit(botToken: string, email: string, password: string) {

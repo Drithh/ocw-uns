@@ -45,10 +45,13 @@ class Bot {
         this.scrapper = new scrapper_1.Scrapper(page, file.profile.email, file.profile.password);
         this.bot = new telegraf_1.Telegraf(file.profile.botToken);
         this.bot.command('start', (ctx) => {
+            if (file.profile.chatId !== String(ctx.from.id)) {
+                file.profile.chatId = String(ctx.from.id);
+                file.write();
+            }
             ctx.reply('List Command', this.mainMenuKeyboard);
         });
         this.bot.hears('Absen', (ctx) => __awaiter(this, void 0, void 0, function* () {
-            console.log(ctx.from);
             yield ctx.reply('Mencoba login ' + file.profile.email);
             const loginMessage = yield this.scrapper.login();
             yield ctx.reply(loginMessage, this.mainMenuKeyboard);
@@ -91,7 +94,9 @@ class Bot {
             ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
         }));
         this.bot.launch().then(() => {
-            this.bot.telegram.sendMessage(838731410, 'Senangnya Bisa Hidup Kembali :D');
+            if (file.profile.chatId) {
+                this.bot.telegram.sendMessage(file.profile.chatId, 'Senangnya Bisa Hidup Kembali :D', this.mainMenuKeyboard);
+            }
         });
     }
 }
