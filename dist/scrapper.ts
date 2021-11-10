@@ -152,7 +152,11 @@ export class Scrapper {
             courseName +
             ' ' +
             new Date(courseStartTime).toLocaleDateString('en-US'),
-          !scheduleCond ? meetingLink : '-',
+          scheduleCond == 0
+            ? meetingLink
+            : scheduleCond == 1 && courseStartTime - currentTime < 900000
+            ? 'soon'
+            : '-',
         ]);
       });
     }
@@ -171,7 +175,9 @@ export class Scrapper {
 
     await this.page.click('li button.btn-default');
     await this.page.click('button#submit-lakukan-presensi');
-
+    await this.page.goto('https://ocw.uns.ac.id', {
+      waitUntil: 'networkidle2',
+    });
     return 'Absen Berhasil';
   };
 }

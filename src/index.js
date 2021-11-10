@@ -9,9 +9,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.addSchedule = void 0;
 const puppeteer = require("puppeteer");
 const file_1 = require("./file");
+const cron_1 = require("cron");
 const bot_1 = require("./bot");
+const addSchedule = (unixTime) => {
+    const date = new Date(unixTime);
+};
+exports.addSchedule = addSchedule;
+const date = new Date();
+date.setMinutes(new Date().getMinutes() + 2);
+console.log(date);
+const job = new cron_1.CronJob(date, function () {
+    const d = new Date();
+    console.log('Specific date:', date, ', onTick at:', d);
+});
+console.log('After job instantiation');
+job.start();
+console.log(new Date().getTime());
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     let file = new file_1.File();
     file.read();
@@ -37,5 +53,4 @@ const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Started ${browserVersion}`);
     return browser;
 });
-main();
 //# sourceMappingURL=index.js.map

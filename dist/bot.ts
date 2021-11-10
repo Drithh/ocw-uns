@@ -2,8 +2,7 @@ import { Scrapper } from './scrapper';
 import * as puppeteer from 'puppeteer';
 import { Telegraf, Scenes, Markup, session, Context } from 'telegraf';
 import { File } from './file';
-
-// const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { CronJob } from 'cron';
 
 export class Bot {
   private mainMenuKeyboard = Markup.keyboard([
@@ -63,42 +62,9 @@ export class Bot {
     });
 
     this.bot.hears('Absen', async (ctx) => {
-      await ctx.reply('Mencoba login ' + file.profile.email);
-      const loginMessage: string = await this.scrapper.login();
-      await ctx.reply(loginMessage, this.mainMenuKeyboard);
-      await ctx.reply('Mengecek Mata Kuliah Yang Alpha');
-      const count = await this.scrapper.countAlpha();
-
-      // Ketika ada Alpha
-      if (count > 0) {
-        await ctx.reply('Terdapat ' + count + ' Alpha');
-        await ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
-        const listAlpha = await this.scrapper.listAlpha();
-        var messageStrings = listAlpha.map(function (tuple) {
-          return tuple[0];
-        });
-        var meetingLinks = listAlpha.map(function (tuple) {
-          return tuple[1];
-        });
-
-        messageStrings.forEach((messageString, key, messageStrings) => {
-          if (Object.is(messageStrings.length - 1, key)) {
-            ctx.reply(messageString, this.mainMenuKeyboard);
-          } else {
-            ctx.reply(messageString);
-          }
-        });
-        await ctx.reply('Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
-        for (const meetingLink of meetingLinks) {
-          if (meetingLink !== '-') {
-            const absent = await this.scrapper.absent(meetingLink);
-            ctx.reply(absent);
-          }
-        }
-      } else {
-        await ctx.reply('Tidak Terdapat Alpha\nSelamat!');
-      }
+      this.absent();
     });
+
     const stage: any = new Scenes.Stage([this.wizardScene]);
     this.bot.use(session());
     this.bot.use(stage.middleware());
@@ -116,5 +82,87 @@ export class Bot {
         );
       }
     });
+
+    const job = new CronJob('* */15 7-17 * * *', () => {
+      this.absent();
+    });
+    job.start();
   }
+
+  public absent = async () => {
+    await this.bot.telegram.sendMessage(
+      this.file.profile.chatId,
+      'Mencoba login ' + this.file.profile.email
+    );
+    const loginMessage: string = await this.scrapper.login();
+    await this.bot.telegram.sendMessage(
+      this.file.profile.chatId,
+      loginMessage,
+      this.mainMenuKeyboard
+    );
+    await this.bot.telegram.sendMessage(
+      this.file.profile.chatId,
+      'Mengecek Mata Kuliah Yang Alpha'
+    );
+    const count = await this.scrapper.countAlpha();
+
+    // Ketika ada Alpha
+    if (count > 0) {
+      await this.bot.telegram.sendMessage(
+        this.file.profile.chatId,
+        'Terdapat ' + count + ' Alpha'
+      );
+      await this.bot.telegram.sendMessage(
+        this.file.profile.chatId,
+        'Mengecek Apakah Kamu Benaran Alpha...'
+      );
+      const listAlpha = await this.scrapper.listAlpha();
+      var messageStrings = listAlpha.map(function (tuple) {
+        return tuple[0];
+      });
+      var meetingLinks = listAlpha.map(function (tuple) {
+        return tuple[1];
+      });
+
+      messageStrings.forEach((messageString, key, messageStrings) => {
+        if (Object.is(messageStrings.length - 1, key)) {
+          this.bot.telegram.sendMessage(
+            this.file.profile.chatId,
+            messageString,
+            this.mainMenuKeyboard
+          );
+        } else {
+          this.bot.telegram.sendMessage(
+            this.file.profile.chatId,
+            messageString
+          );
+        }
+      });
+      await this.bot.telegram.sendMessage(
+        this.file.profile.chatId,
+        'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan'
+      );
+      for (const meetingLink of meetingLinks) {
+        // if unix time
+        if (/^\d+$/.test(meetingLink)) {
+          this.addSchedule(parseInt(meetingLink));
+        } else if (meetingLink !== '-') {
+          const absent = await this.scrapper.absent(meetingLink);
+          this.bot.telegram.sendMessage(this.file.profile.chatId, absent);
+        }
+      }
+    } else {
+      await this.bot.telegram.sendMessage(
+        this.file.profile.chatId,
+        'Tidak Terdapat Alpha\nSelamat!'
+      );
+    }
+  };
+
+  private addSchedule = (unixTime: number) => {
+    const courseStartTime = new CronJob(new Date(unixTime), () => {
+      this.absent();
+    });
+    courseStartTime.start();
+  };
 }

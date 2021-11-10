@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Bot = void 0;
 const scrapper_1 = require("./scrapper");
 const telegraf_1 = require("telegraf");
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 class Bot {
     constructor(file, page) {
         this.file = file;

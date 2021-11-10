@@ -125,6 +125,9 @@ class Scrapper {
             });
             yield this.page.click('li button.btn-default');
             yield this.page.click('button#submit-lakukan-presensi');
+            yield this.page.goto('https://ocw.uns.ac.id', {
+                waitUntil: 'networkidle2',
+            });
             return 'Absen Berhasil';
         });
     }

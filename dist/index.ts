@@ -1,11 +1,13 @@
 import * as puppeteer from 'puppeteer';
 import { File } from './file';
-
-import { Telegraf } from 'telegraf';
+import { CronJob } from 'cron';
 import { Bot } from './bot';
 
 // TODO
-// If login Fail
+// Response Link When Absent
+// Scheduler
+
+
 
 const main = async () => {
   let file: File = new File();
@@ -38,4 +40,4 @@ const setupBrowser = async () => {
   return browser;
 };
 
-main();
+// main();
