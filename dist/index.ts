@@ -5,8 +5,7 @@ import { Telegraf } from 'telegraf';
 import { Bot } from './bot';
 
 // TODO
-// User Profile
-// Wait for anonther Function
+// If login Fail
 
 const main = async () => {
   let file: File = new File();

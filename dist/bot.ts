@@ -7,8 +7,7 @@ import { File } from './file';
 
 export class Bot {
   private mainMenuKeyboard = Markup.keyboard([
-    Markup.button.text('Login'),
-    Markup.button.text('List Alpha'),
+    Markup.button.text('Absen'),
     Markup.button.text('Edit Profile'),
   ])
     .resize()
@@ -59,25 +58,28 @@ export class Bot {
       ctx.reply('List Command', this.mainMenuKeyboard);
     });
 
-    this.bot.hears('Login', async (ctx) => {
+    this.bot.hears('Absen', async (ctx) => {
       ctx.reply('Mencoba login ' + file.profile.email);
       const loginMessage: string = await this.scrapper.login();
       ctx.reply(loginMessage, this.mainMenuKeyboard);
-    });
-
-    this.bot.hears('List Alpha', async (ctx) => {
       ctx.reply('Mengecek Mata Kuliah Yang Alpha');
       const count = await this.scrapper.countAlpha();
       await ctx.reply('Terdapat ' + count + ' Alpha').then();
       ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
-      const messaageStrings = await this.scrapper.listAlpha();
-      messaageStrings.forEach((messaageString, key, messaageStrings) => {
-        if (Object.is(messaageStrings.length - 1, key)) {
-          ctx.reply(messaageString, this.mainMenuKeyboard);
+      const messageStrings = await this.scrapper.listAlpha();
+      messageStrings.forEach((messageString, key, messageStrings) => {
+        if (Object.is(messageString.length - 1, key)) {
+          ctx.reply(messageString[0], this.mainMenuKeyboard);
         } else {
-          ctx.reply(messaageString);
+          ctx.reply(messageString[0]);
         }
       });
+      for (const messageString of messageStrings) {
+        if (messageString[1] !== '-') {
+          const absent = await this.scrapper.absent(messageString[1]);
+          ctx.reply(absent);
+        }
+      }
     });
     const stage: any = new Scenes.Stage([this.wizardScene]);
     this.bot.use(session());

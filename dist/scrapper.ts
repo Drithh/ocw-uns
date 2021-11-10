@@ -29,7 +29,6 @@ export class Scrapper {
   };
 
   public countAlpha = async () => {
-    // await this.login();
     await this.page.goto(
       'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
     );
@@ -90,7 +89,7 @@ export class Scrapper {
   };
 
   public listAlpha = async () => {
-    const messaageStrings: string[] = new Array();
+    const messaageStrings: string[][] = new Array();
     for (const alphaCourseLink of this.alphaCourseLinks) {
       await this.page.goto(String(alphaCourseLink[1]));
       await this.page.waitForSelector('#clock');
@@ -109,9 +108,9 @@ export class Scrapper {
           (listAbsent) => listAbsent.querySelector('p').textContent
         );
         const dates = Array.from(listAbsents, (listAbsent) =>
-          listAbsent.querySelectorAll('small')
+          listAbsent.querySelectorAll('small, a.btn-default')
         );
-        const schedules = Array.from(dates, (date) => {
+        let schedules: any[][] = Array.from(dates, (date) => {
           const scheduleDate = date[0].innerHTML;
           const [startTime, endTime] = date[1].innerHTML
             .split(' ')
@@ -119,9 +118,9 @@ export class Scrapper {
           return [
             Date.parse(scheduleDate + ' ' + startTime + ' GMT+7'),
             Date.parse(scheduleDate + ' ' + endTime + ' GMT+7'),
+            'https://ocw.uns.ac.id/' + date[2].getAttribute('href'),
           ];
         });
-
         return meeting.map((item, i) => {
           return [item, schedules[i]];
         });
@@ -133,39 +132,42 @@ export class Scrapper {
         'Kuliah Belum Dimulai ',
         'Kuliah Sudah Selesai ',
       ];
-      console.log(courseSchedules);
       courseSchedules.forEach((courseSchedule: any) => {
-        const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
-        messaageStrings.push(
-          Messages[
-            currentTime > courseStartTime && currentTime < courseEndTime
-              ? 0
-              : currentTime < courseStartTime
-              ? 1
-              : 2
-          ] +
+        const [courseName, [courseStartTime, courseEndTime, meetingLink]] =
+          courseSchedule;
+        const scheduleCond =
+          currentTime > courseStartTime && currentTime < courseEndTime
+            ? 0
+            : currentTime < courseStartTime
+            ? 1
+            : 2;
+        messaageStrings.push([
+          Messages[scheduleCond] +
             alphaCourseLink[0] +
             ' ' +
             courseName +
             ' ' +
-            new Date(courseStartTime).toLocaleDateString('en-US')
-        );
+            new Date(courseStartTime).toLocaleDateString('en-US'),
+          !scheduleCond ? meetingLink : '-',
+        ]);
       });
     }
     return messaageStrings;
   };
+
+  public absent = async (linkAbsent: string) => {
+    await this.page.goto(linkAbsent, {
+      waitUntil: 'networkidle2',
+    });
+
+    await this.page.setGeolocation({
+      latitude: -7.7049,
+      longitude: 110.6019,
+    });
+
+    await this.page.click('li button.btn-default');
+    await this.page.click('button#submit-lakukan-presensi');
+
+    return 'Absen Berhasil';
+  };
 }
-
-export const absent = async (linkAbsent: string, page: puppeteer.Page) => {
-  await page.goto(linkAbsent, {
-    waitUntil: 'networkidle2',
-  });
-
-  await page.setGeolocation({
-    latitude: -7.7049,
-    longitude: 110.6019,
-  });
-
-  await page.click('li button.btn-default');
-  await page.click('button#submit-lakukan-presensi');
-};

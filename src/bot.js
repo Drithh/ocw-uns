@@ -17,8 +17,7 @@ class Bot {
         this.file = file;
         this.page = page;
         this.mainMenuKeyboard = telegraf_1.Markup.keyboard([
-            telegraf_1.Markup.button.text('Login'),
-            telegraf_1.Markup.button.text('List Alpha'),
+            telegraf_1.Markup.button.text('Absen'),
             telegraf_1.Markup.button.text('Edit Profile'),
         ])
             .resize()
@@ -48,12 +47,10 @@ class Bot {
         this.bot.command('start', (ctx) => {
             ctx.reply('List Command', this.mainMenuKeyboard);
         });
-        this.bot.hears('Login', (ctx) => __awaiter(this, void 0, void 0, function* () {
+        this.bot.hears('Absen', (ctx) => __awaiter(this, void 0, void 0, function* () {
             ctx.reply('Mencoba login ' + file.profile.email);
             const loginMessage = yield this.scrapper.login();
             ctx.reply(loginMessage, this.mainMenuKeyboard);
-        }));
-        this.bot.hears('List Alpha', (ctx) => __awaiter(this, void 0, void 0, function* () {
             ctx.reply('Mengecek Mata Kuliah Yang Alpha');
             const count = yield this.scrapper.countAlpha();
             yield ctx.reply('Terdapat ' + count + ' Alpha').then();
@@ -61,10 +58,10 @@ class Bot {
             const messaageStrings = yield this.scrapper.listAlpha();
             messaageStrings.forEach((messaageString, key, messaageStrings) => {
                 if (Object.is(messaageStrings.length - 1, key)) {
-                    ctx.reply(messaageString, this.mainMenuKeyboard);
+                    ctx.reply(messaageString[0], this.mainMenuKeyboard);
                 }
                 else {
-                    ctx.reply(messaageString);
+                    ctx.reply(messaageString[0]);
                 }
             });
         }));

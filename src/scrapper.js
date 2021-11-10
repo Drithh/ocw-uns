@@ -71,8 +71,8 @@ class Scrapper {
                     let listAbsents = Array.from(document.querySelectorAll('.col-md-6 .panel-body'));
                     listAbsents = listAbsents.filter((listAbsent) => listAbsent.querySelector('p:nth-of-type(4)').innerHTML.match('ALPHA'));
                     const meeting = Array.from(listAbsents, (listAbsent) => listAbsent.querySelector('p').textContent);
-                    const dates = Array.from(listAbsents, (listAbsent) => listAbsent.querySelectorAll('small'));
-                    const schedules = Array.from(dates, (date) => {
+                    const dates = Array.from(listAbsents, (listAbsent) => listAbsent.querySelectorAll('small, a.btn-default'));
+                    let schedules = Array.from(dates, (date) => {
                         const scheduleDate = date[0].innerHTML;
                         const [startTime, endTime] = date[1].innerHTML
                             .split(' ')
@@ -80,6 +80,7 @@ class Scrapper {
                         return [
                             Date.parse(scheduleDate + ' ' + startTime + ' GMT+7'),
                             Date.parse(scheduleDate + ' ' + endTime + ' GMT+7'),
+                            date[2].getAttribute('href'),
                         ];
                     });
                     return meeting.map((item, i) => {
@@ -93,17 +94,21 @@ class Scrapper {
                 ];
                 console.log(courseSchedules);
                 courseSchedules.forEach((courseSchedule) => {
-                    const [courseName, [courseStartTime, courseEndTime]] = courseSchedule;
-                    messaageStrings.push(Messages[currentTime > courseStartTime && currentTime < courseEndTime
+                    const [courseName, [courseStartTime, courseEndTime, meetingLink]] = courseSchedule;
+                    const scheduleCond = currentTime > courseStartTime && currentTime < courseEndTime
                         ? 0
                         : currentTime < courseStartTime
                             ? 1
-                            : 2] +
-                        alphaCourseLink[0] +
-                        ' ' +
-                        courseName +
-                        ' ' +
-                        new Date(courseStartTime).toLocaleDateString('en-US'));
+                            : 2;
+                    messaageStrings.push([
+                        Messages[scheduleCond] +
+                            alphaCourseLink[0] +
+                            ' ' +
+                            courseName +
+                            ' ' +
+                            new Date(courseStartTime).toLocaleDateString('en-US'),
+                        meetingLink,
+                    ]);
                 });
             }
             return messaageStrings;
