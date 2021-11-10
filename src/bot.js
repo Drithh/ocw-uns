@@ -48,22 +48,41 @@ class Bot {
             ctx.reply('List Command', this.mainMenuKeyboard);
         });
         this.bot.hears('Absen', (ctx) => __awaiter(this, void 0, void 0, function* () {
-            ctx.reply('Mencoba login ' + file.profile.email);
+            console.log(ctx.from);
+            yield ctx.reply('Mencoba login ' + file.profile.email);
             const loginMessage = yield this.scrapper.login();
-            ctx.reply(loginMessage, this.mainMenuKeyboard);
-            ctx.reply('Mengecek Mata Kuliah Yang Alpha');
+            yield ctx.reply(loginMessage, this.mainMenuKeyboard);
+            yield ctx.reply('Mengecek Mata Kuliah Yang Alpha');
             const count = yield this.scrapper.countAlpha();
-            yield ctx.reply('Terdapat ' + count + ' Alpha').then();
-            ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
-            const messaageStrings = yield this.scrapper.listAlpha();
-            messaageStrings.forEach((messaageString, key, messaageStrings) => {
-                if (Object.is(messaageStrings.length - 1, key)) {
-                    ctx.reply(messaageString[0], this.mainMenuKeyboard);
+            if (count > 0) {
+                yield ctx.reply('Terdapat ' + count + ' Alpha');
+                yield ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
+                const listAlpha = yield this.scrapper.listAlpha();
+                var messageStrings = listAlpha.map(function (tuple) {
+                    return tuple[0];
+                });
+                var meetingLinks = listAlpha.map(function (tuple) {
+                    return tuple[1];
+                });
+                messageStrings.forEach((messageString, key, messageStrings) => {
+                    if (Object.is(messageStrings.length - 1, key)) {
+                        ctx.reply(messageString, this.mainMenuKeyboard);
+                    }
+                    else {
+                        ctx.reply(messageString);
+                    }
+                });
+                yield ctx.reply('Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
+                for (const meetingLink of meetingLinks) {
+                    if (meetingLink !== '-') {
+                        const absent = yield this.scrapper.absent(meetingLink);
+                        ctx.reply(absent);
+                    }
                 }
-                else {
-                    ctx.reply(messaageString[0]);
-                }
-            });
+            }
+            else {
+                yield ctx.reply('Tidak Terdapat Alpha\nSelamat!');
+            }
         }));
         const stage = new telegraf_1.Scenes.Stage([this.wizardScene]);
         this.bot.use((0, telegraf_1.session)());
@@ -71,7 +90,9 @@ class Bot {
         this.bot.hears('Edit Profile', (ctx) => __awaiter(this, void 0, void 0, function* () {
             ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
         }));
-        this.bot.launch();
+        this.bot.launch().then(() => {
+            this.bot.telegram.sendMessage(838731410, 'Senangnya Bisa Hidup Kembali :D');
+        });
     }
 }
 exports.Bot = Bot;

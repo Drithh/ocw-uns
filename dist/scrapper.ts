@@ -30,9 +30,11 @@ export class Scrapper {
 
   public countAlpha = async () => {
     await this.page.goto(
-      'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail'
+      'https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail',
+      {
+        waitUntil: 'networkidle2',
+      }
     );
-    await this.page.waitForSelector('.wrapper');
 
     const courses = await this.page.evaluate(() => {
       const rows = document.querySelectorAll('table tr');
@@ -66,7 +68,7 @@ export class Scrapper {
           Array.from(
             listCourses,
             (listCourse) =>
-              'https://ocw.uns.ac.id/' + listCourse.getAttribute('href')
+              'https://ocw.uns.ac.id' + listCourse.getAttribute('href')
           )
         )
       );
@@ -91,7 +93,9 @@ export class Scrapper {
   public listAlpha = async () => {
     const messaageStrings: string[][] = new Array();
     for (const alphaCourseLink of this.alphaCourseLinks) {
-      await this.page.goto(String(alphaCourseLink[1]));
+      await this.page.goto(String(alphaCourseLink[1]), {
+        waitUntil: 'networkidle2',
+      });
       await this.page.waitForSelector('#clock');
 
       const currentTime = new Date().getTime();

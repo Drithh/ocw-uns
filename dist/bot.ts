@@ -59,26 +59,40 @@ export class Bot {
     });
 
     this.bot.hears('Absen', async (ctx) => {
-      ctx.reply('Mencoba login ' + file.profile.email);
+      await ctx.reply('Mencoba login ' + file.profile.email);
       const loginMessage: string = await this.scrapper.login();
-      ctx.reply(loginMessage, this.mainMenuKeyboard);
-      ctx.reply('Mengecek Mata Kuliah Yang Alpha');
+      await ctx.reply(loginMessage, this.mainMenuKeyboard);
+      await ctx.reply('Mengecek Mata Kuliah Yang Alpha');
       const count = await this.scrapper.countAlpha();
-      await ctx.reply('Terdapat ' + count + ' Alpha').then();
-      ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
-      const messageStrings = await this.scrapper.listAlpha();
-      messageStrings.forEach((messageString, key, messageStrings) => {
-        if (Object.is(messageString.length - 1, key)) {
-          ctx.reply(messageString[0], this.mainMenuKeyboard);
-        } else {
-          ctx.reply(messageString[0]);
+
+      // Ketika ada Alpha
+      if (count > 0) {
+        await ctx.reply('Terdapat ' + count + ' Alpha');
+        await ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
+        const listAlpha = await this.scrapper.listAlpha();
+        var messageStrings = listAlpha.map(function (tuple) {
+          return tuple[0];
+        });
+        var meetingLinks = listAlpha.map(function (tuple) {
+          return tuple[1];
+        });
+
+        messageStrings.forEach((messageString, key, messageStrings) => {
+          if (Object.is(messageStrings.length - 1, key)) {
+            ctx.reply(messageString, this.mainMenuKeyboard);
+          } else {
+            ctx.reply(messageString);
+          }
+        });
+        await ctx.reply('Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
+        for (const meetingLink of meetingLinks) {
+          if (meetingLink !== '-') {
+            const absent = await this.scrapper.absent(meetingLink);
+            ctx.reply(absent);
+          }
         }
-      });
-      for (const messageString of messageStrings) {
-        if (messageString[1] !== '-') {
-          const absent = await this.scrapper.absent(messageString[1]);
-          ctx.reply(absent);
-        }
+      } else {
+        await ctx.reply('Tidak Terdapat Alpha\nSelamat!');
       }
     });
     const stage: any = new Scenes.Stage([this.wizardScene]);
@@ -89,6 +103,6 @@ export class Bot {
       ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
     });
 
-    this.bot.launch();
+    this.bot.launch().then(() => {});
   }
 }

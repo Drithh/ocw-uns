@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.absent = exports.Scrapper = void 0;
+exports.Scrapper = void 0;
 class Scrapper {
     constructor(page, email, password) {
         this.page = page;
@@ -31,8 +31,9 @@ class Scrapper {
             }
         });
         this.countAlpha = () => __awaiter(this, void 0, void 0, function* () {
-            yield this.page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail');
-            yield this.page.waitForSelector('.wrapper');
+            yield this.page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail', {
+                waitUntil: 'networkidle2',
+            });
             const courses = yield this.page.evaluate(() => {
                 const rows = document.querySelectorAll('table tr');
                 return Array.from(rows, (row) => {
@@ -46,7 +47,7 @@ class Scrapper {
             const myCourses = yield this.page.evaluate(() => {
                 const listCourses = Array.from(document.querySelectorAll('.daftar-makul a'));
                 const NamaCourses = Array.from(new Set(Array.from(listCourses, (listCourse) => listCourse.innerText)));
-                const LinkCourses = Array.from(new Set(Array.from(listCourses, (listCourse) => 'https://ocw.uns.ac.id/' + listCourse.getAttribute('href'))));
+                const LinkCourses = Array.from(new Set(Array.from(listCourses, (listCourse) => 'https://ocw.uns.ac.id' + listCourse.getAttribute('href'))));
                 return NamaCourses.map((item, i) => {
                     return [item, [LinkCourses[i]]];
                 });
@@ -64,7 +65,9 @@ class Scrapper {
         this.listAlpha = () => __awaiter(this, void 0, void 0, function* () {
             const messaageStrings = new Array();
             for (const alphaCourseLink of this.alphaCourseLinks) {
-                yield this.page.goto(String(alphaCourseLink[1]));
+                yield this.page.goto(String(alphaCourseLink[1]), {
+                    waitUntil: 'networkidle2',
+                });
                 yield this.page.waitForSelector('#clock');
                 const currentTime = new Date().getTime();
                 const courseSchedules = yield this.page.evaluate(() => {
@@ -80,7 +83,7 @@ class Scrapper {
                         return [
                             Date.parse(scheduleDate + ' ' + startTime + ' GMT+7'),
                             Date.parse(scheduleDate + ' ' + endTime + ' GMT+7'),
-                            date[2].getAttribute('href'),
+                            'https://ocw.uns.ac.id/' + date[2].getAttribute('href'),
                         ];
                     });
                     return meeting.map((item, i) => {
@@ -92,7 +95,6 @@ class Scrapper {
                     'Kuliah Belum Dimulai ',
                     'Kuliah Sudah Selesai ',
                 ];
-                console.log(courseSchedules);
                 courseSchedules.forEach((courseSchedule) => {
                     const [courseName, [courseStartTime, courseEndTime, meetingLink]] = courseSchedule;
                     const scheduleCond = currentTime > courseStartTime && currentTime < courseEndTime
@@ -107,25 +109,25 @@ class Scrapper {
                             courseName +
                             ' ' +
                             new Date(courseStartTime).toLocaleDateString('en-US'),
-                        meetingLink,
+                        !scheduleCond ? meetingLink : '-',
                     ]);
                 });
             }
             return messaageStrings;
         });
+        this.absent = (linkAbsent) => __awaiter(this, void 0, void 0, function* () {
+            yield this.page.goto(linkAbsent, {
+                waitUntil: 'networkidle2',
+            });
+            yield this.page.setGeolocation({
+                latitude: -7.7049,
+                longitude: 110.6019,
+            });
+            yield this.page.click('li button.btn-default');
+            yield this.page.click('button#submit-lakukan-presensi');
+            return 'Absen Berhasil';
+        });
     }
 }
 exports.Scrapper = Scrapper;
-const absent = (linkAbsent, page) => __awaiter(void 0, void 0, void 0, function* () {
-    yield page.goto(linkAbsent, {
-        waitUntil: 'networkidle2',
-    });
-    yield page.setGeolocation({
-        latitude: -7.7049,
-        longitude: 110.6019,
-    });
-    yield page.click('li button.btn-default');
-    yield page.click('button#submit-lakukan-presensi');
-});
-exports.absent = absent;
 //# sourceMappingURL=scrapper.js.map
