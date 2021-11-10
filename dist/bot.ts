@@ -82,14 +82,21 @@ export class Bot {
         );
       }
     });
-
-    const job = new CronJob('* */15 7-17 * * *', () => {
+    console.log('ini brp kali');
+    const job = new CronJob('0 */15 7-17 * * *', () => {
       this.absent();
     });
     job.start();
   }
 
   public absent = async () => {
+    if (this.file.profile.email === '') {
+      await this.bot.telegram.sendMessage(
+        this.file.profile.chatId,
+        'Isi Profile Terlebih Dahulu'
+      );
+      return;
+    }
     await this.bot.telegram.sendMessage(
       this.file.profile.chatId,
       'Mencoba login ' + this.file.profile.email

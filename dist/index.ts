@@ -1,13 +1,9 @@
 import * as puppeteer from 'puppeteer';
 import { File } from './file';
-import { CronJob } from 'cron';
 import { Bot } from './bot';
 
 // TODO
 // Response Link When Absent
-// Scheduler
-
-
 
 const main = async () => {
   let file: File = new File();
@@ -40,4 +36,4 @@ const setupBrowser = async () => {
   return browser;
 };
 
-// main();
+main();

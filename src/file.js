@@ -32,6 +32,11 @@ class File {
             encoding: 'utf8',
             flag: 'r',
         }));
+        if (this.profile.botToken === '') {
+            var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
+            this.profile.botToken = botToken;
+            this.write();
+        }
     }
 }
 exports.File = File;

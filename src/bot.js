@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Bot = void 0;
 const scrapper_1 = require("./scrapper");
 const telegraf_1 = require("telegraf");
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const cron_1 = require("cron");
 class Bot {
     constructor(file, page) {
         this.file = file;
@@ -43,6 +43,55 @@ class Bot {
             this.file.edit(newProfile.botToken, newProfile.email, newProfile.password);
             return ctx.scene.leave();
         });
+        this.absent = () => __awaiter(this, void 0, void 0, function* () {
+            if (this.file.profile.email === '') {
+                yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Isi Profile Terlebih Dahulu');
+                return;
+            }
+            yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Mencoba login ' + this.file.profile.email);
+            const loginMessage = yield this.scrapper.login();
+            yield this.bot.telegram.sendMessage(this.file.profile.chatId, loginMessage, this.mainMenuKeyboard);
+            yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Mengecek Mata Kuliah Yang Alpha');
+            const count = yield this.scrapper.countAlpha();
+            if (count > 0) {
+                yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Terdapat ' + count + ' Alpha');
+                yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Mengecek Apakah Kamu Benaran Alpha...');
+                const listAlpha = yield this.scrapper.listAlpha();
+                var messageStrings = listAlpha.map(function (tuple) {
+                    return tuple[0];
+                });
+                var meetingLinks = listAlpha.map(function (tuple) {
+                    return tuple[1];
+                });
+                messageStrings.forEach((messageString, key, messageStrings) => {
+                    if (Object.is(messageStrings.length - 1, key)) {
+                        this.bot.telegram.sendMessage(this.file.profile.chatId, messageString, this.mainMenuKeyboard);
+                    }
+                    else {
+                        this.bot.telegram.sendMessage(this.file.profile.chatId, messageString);
+                    }
+                });
+                yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
+                for (const meetingLink of meetingLinks) {
+                    if (/^\d+$/.test(meetingLink)) {
+                        this.addSchedule(parseInt(meetingLink));
+                    }
+                    else if (meetingLink !== '-') {
+                        const absent = yield this.scrapper.absent(meetingLink);
+                        this.bot.telegram.sendMessage(this.file.profile.chatId, absent);
+                    }
+                }
+            }
+            else {
+                yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Tidak Terdapat Alpha\nSelamat!');
+            }
+        });
+        this.addSchedule = (unixTime) => {
+            const courseStartTime = new cron_1.CronJob(new Date(unixTime), () => {
+                this.absent();
+            });
+            courseStartTime.start();
+        };
         this.scrapper = new scrapper_1.Scrapper(page, file.profile.email, file.profile.password);
         this.bot = new telegraf_1.Telegraf(file.profile.botToken);
         this.bot.command('start', (ctx) => {
@@ -53,40 +102,7 @@ class Bot {
             ctx.reply('List Command', this.mainMenuKeyboard);
         });
         this.bot.hears('Absen', (ctx) => __awaiter(this, void 0, void 0, function* () {
-            yield ctx.reply('Mencoba login ' + file.profile.email);
-            const loginMessage = yield this.scrapper.login();
-            yield ctx.reply(loginMessage, this.mainMenuKeyboard);
-            yield ctx.reply('Mengecek Mata Kuliah Yang Alpha');
-            const count = yield this.scrapper.countAlpha();
-            if (count > 0) {
-                yield ctx.reply('Terdapat ' + count + ' Alpha');
-                yield ctx.reply('Mengecek Apakah Kamu Benaran Alpha...');
-                const listAlpha = yield this.scrapper.listAlpha();
-                var messageStrings = listAlpha.map(function (tuple) {
-                    return tuple[0];
-                });
-                var meetingLinks = listAlpha.map(function (tuple) {
-                    return tuple[1];
-                });
-                messageStrings.forEach((messageString, key, messageStrings) => {
-                    if (Object.is(messageStrings.length - 1, key)) {
-                        ctx.reply(messageString, this.mainMenuKeyboard);
-                    }
-                    else {
-                        ctx.reply(messageString);
-                    }
-                });
-                yield ctx.reply('Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
-                for (const meetingLink of meetingLinks) {
-                    if (meetingLink !== '-') {
-                        const absent = yield this.scrapper.absent(meetingLink);
-                        ctx.reply(absent);
-                    }
-                }
-            }
-            else {
-                yield ctx.reply('Tidak Terdapat Alpha\nSelamat!');
-            }
+            this.absent();
         }));
         const stage = new telegraf_1.Scenes.Stage([this.wizardScene]);
         this.bot.use((0, telegraf_1.session)());
@@ -99,6 +115,11 @@ class Bot {
                 this.bot.telegram.sendMessage(file.profile.chatId, 'Senangnya Bisa Hidup Kembali :D', this.mainMenuKeyboard);
             }
         });
+        console.log('ini brp kali');
+        const job = new cron_1.CronJob('0 */1 7-17 * * *', () => {
+            console.log('asdad', new Date());
+        });
+        job.start();
     }
 }
 exports.Bot = Bot;

@@ -28,6 +28,11 @@ export class File {
         flag: 'r',
       })
     );
+    if (this.profile.botToken === '') {
+      var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
+      this.profile.botToken = botToken;
+      this.write();
+    }
   }
 
   public write = () => {

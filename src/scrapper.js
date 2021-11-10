@@ -109,7 +109,11 @@ class Scrapper {
                             courseName +
                             ' ' +
                             new Date(courseStartTime).toLocaleDateString('en-US'),
-                        !scheduleCond ? meetingLink : '-',
+                        scheduleCond == 0
+                            ? meetingLink
+                            : scheduleCond == 1 && courseStartTime - currentTime < 900000
+                                ? 'soon'
+                                : '-',
                     ]);
                 });
             }

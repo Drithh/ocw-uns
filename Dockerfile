@@ -12,8 +12,8 @@ RUN apt-get update \
 ADD package.json package-lock.json /
 RUN npm install
 
-ARG GITHASH=unspecified
-RUN echo ${GITHASH} > /www/githash.txt
+ARG BOTTOKEN=unspecified
+RUN echo ${BOTTOKEN} > BotTokenEnv.txt
 
 WORKDIR /app
 
