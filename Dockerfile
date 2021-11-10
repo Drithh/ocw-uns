@@ -12,6 +12,9 @@ RUN apt-get update \
 ADD package.json package-lock.json /
 RUN npm install
 
+ARG GITHASH=unspecified
+RUN echo ${GITHASH} > /www/githash.txt
+
 WORKDIR /app
 
 COPY . .
