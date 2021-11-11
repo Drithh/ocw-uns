@@ -16,6 +16,6 @@ WORKDIR /app
 
 COPY . .
 
-RUN echo ${BOTTOKEN} > BotTokenEnv.txt
+RUN echo ${BOTTOKEN} >> BotTokenEnv.txt
 
 CMD [ "node", "src/index"]
