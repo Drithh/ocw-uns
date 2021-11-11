@@ -29,10 +29,14 @@ export class File {
       })
     );
     if (this.profile.botToken === '') {
-      var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
-      this.profile.botToken = botToken;
-      this.write();
+      this.readWriteBotToken();
     }
+  }
+
+  private readWriteBotToken() {
+    var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
+    this.profile.botToken = botToken;
+    this.write();
   }
 
   public write = () => {
