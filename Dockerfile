@@ -16,6 +16,7 @@ WORKDIR /app
 
 COPY . .
 
+ARG BOTTOKEN=unspecified
 RUN echo ${BOTTOKEN} >> /app/BotTokenEnv.txt
 # sed -i 'kok gabisa bisa ajg' /etc/coba1.txt
 # bash -c 'kok gabisa bisa ajg' >> /app/coba2.txt
