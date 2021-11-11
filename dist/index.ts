@@ -1,6 +1,7 @@
 import * as puppeteer from 'puppeteer';
 import { File } from './file';
 import { Bot } from './bot';
+import { CronJob } from 'cron';
 
 // TODO
 // Response Link When Absent

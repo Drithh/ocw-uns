@@ -117,8 +117,7 @@ class Bot {
         });
         const job = new cron_1.CronJob('0 */15 7-17 * * *', () => {
             this.absent();
-        });
-        job.start();
+        }, null, true, 'Asia/Jakarta');
     }
 }
 exports.Bot = Bot;

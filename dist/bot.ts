@@ -82,10 +82,15 @@ export class Bot {
         );
       }
     });
-    const job = new CronJob('0 */15 7-17 * * *', () => {
-      this.absent();
-    });
-    job.start();
+    const job = new CronJob(
+      '0 */15 7-17 * * *',
+      () => {
+        this.absent();
+      },
+      null,
+      true,
+      'Asia/Jakarta'
+    );
   }
 
   public absent = async () => {
