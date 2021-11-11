@@ -12,10 +12,10 @@ RUN apt-get update \
 ADD package.json package-lock.json /
 RUN npm install
 
-RUN echo ${BOTTOKEN} > BotTokenEnv.txt
-
 WORKDIR /app
 
 COPY . .
+
+RUN echo ${BOTTOKEN} > BotTokenEnv.txt
 
 CMD [ "node", "src/index"]
