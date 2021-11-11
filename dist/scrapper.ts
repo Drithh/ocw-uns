@@ -131,11 +131,7 @@ export class Scrapper {
       });
 
       // Belum Absen
-      const Messages = [
-        'Kuliah Sedang Berjalan ',
-        'Kuliah Belum Dimulai ',
-        'Kuliah Sudah Selesai ',
-      ];
+      const Messages = ['Kuliah Sedang Berjalan ', 'Kuliah Belum Dimulai '];
       courseSchedules.forEach((courseSchedule: any) => {
         const [courseName, [courseStartTime, courseEndTime, meetingLink]] =
           courseSchedule;
@@ -145,19 +141,21 @@ export class Scrapper {
             : currentTime < courseStartTime
             ? 1
             : 2;
-        messaageStrings.push([
-          Messages[scheduleCond] +
-            alphaCourseLink[0] +
-            ' ' +
-            courseName +
-            ' ' +
-            new Date(courseStartTime).toLocaleDateString('en-US'),
-          scheduleCond == 0
-            ? meetingLink
-            : scheduleCond == 1 && courseStartTime - currentTime < 900000
-            ? 'soon'
-            : '-',
-        ]);
+        if (scheduleCond !== 2) {
+          messaageStrings.push([
+            Messages[scheduleCond] +
+              alphaCourseLink[0] +
+              ' ' +
+              courseName +
+              ' ' +
+              new Date(courseStartTime).toLocaleDateString('en-US'),
+            scheduleCond == 0
+              ? meetingLink
+              : scheduleCond == 1 && courseStartTime - currentTime < 900000
+              ? 'soon'
+              : '-',
+          ]);
+        }
       });
     }
     return messaageStrings;
