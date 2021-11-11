@@ -115,9 +115,8 @@ class Bot {
                 this.bot.telegram.sendMessage(file.profile.chatId, 'Senangnya Bisa Hidup Kembali :D', this.mainMenuKeyboard);
             }
         });
-        console.log('ini brp kali');
-        const job = new cron_1.CronJob('0 */1 7-17 * * *', () => {
-            console.log('asdad', new Date());
+        const job = new cron_1.CronJob('0 */15 7-17 * * *', () => {
+            this.absent();
         });
         job.start();
     }

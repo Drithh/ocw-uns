@@ -82,7 +82,6 @@ export class Bot {
         );
       }
     });
-    console.log('ini brp kali');
     const job = new CronJob('0 */15 7-17 * * *', () => {
       this.absent();
     });
