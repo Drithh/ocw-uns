@@ -77,8 +77,8 @@ class Bot {
                         this.addSchedule(parseInt(meetingLink));
                     }
                     else if (meetingLink !== '-') {
-                        const absent = yield this.scrapper.absent(meetingLink);
-                        this.bot.telegram.sendMessage(this.file.profile.chatId, absent);
+                        const classLink = yield this.scrapper.absent(meetingLink);
+                        this.bot.telegram.sendMessage(this.file.profile.chatId, classLink);
                     }
                 }
             }

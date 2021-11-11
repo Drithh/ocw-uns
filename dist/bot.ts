@@ -153,8 +153,8 @@ export class Bot {
         if (/^\d+$/.test(meetingLink)) {
           this.addSchedule(parseInt(meetingLink));
         } else if (meetingLink !== '-') {
-          const absent = await this.scrapper.absent(meetingLink);
-          this.bot.telegram.sendMessage(this.file.profile.chatId, absent);
+          const classLink: string = await this.scrapper.absent(meetingLink);
+          this.bot.telegram.sendMessage(this.file.profile.chatId, classLink);
         }
       }
     } else {

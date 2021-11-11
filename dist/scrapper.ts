@@ -173,9 +173,11 @@ export class Scrapper {
 
     await this.page.click('li button.btn-default');
     await this.page.click('button#submit-lakukan-presensi');
-    await this.page.goto('https://ocw.uns.ac.id', {
+    await this.page.waitForNavigation({ waitUntil: 'networkidle2' });
+    const linkURL: string = this.page.url.toString();
+    await this.page.goto('https://ocw.uns.ac.id/', {
       waitUntil: 'networkidle2',
     });
-    return 'Absen Berhasil';
+    return linkURL;
   };
 }

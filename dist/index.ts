@@ -19,7 +19,7 @@ const main = async () => {
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     userDataDir: './cache',
     args: [
       '--no-sandbox',
