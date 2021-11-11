@@ -16,6 +16,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN echo ${BOTTOKEN} >> BotTokenEnv.txt
+RUN echo ${BOTTOKEN} >> /app/BotTokenEnv.txt
+# sed -i 'kok gabisa bisa ajg' /etc/coba1.txt
+bash -c 'kok gabisa bisa ajg' >> /app/coba2.txt
+RUN echo 'kok gabisa bisa ajg' >> /app/coba1.txt
 
 CMD [ "node", "src/index"]
