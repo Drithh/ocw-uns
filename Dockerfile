@@ -12,7 +12,6 @@ RUN apt-get update \
 ADD package.json package-lock.json /
 RUN npm install
 
-ARG BOTTOKEN=unspecified
 RUN echo ${BOTTOKEN} > BotTokenEnv.txt
 
 WORKDIR /app
