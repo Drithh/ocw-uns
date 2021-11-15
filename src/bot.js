@@ -71,12 +71,16 @@ class Bot {
                         this.bot.telegram.sendMessage(this.file.profile.chatId, messageString);
                     }
                 });
-                yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
+                let isAbsent = false;
                 for (const meetingLink of meetingLinks) {
                     if (/^\d+$/.test(meetingLink)) {
                         this.addSchedule(parseInt(meetingLink));
                     }
                     else if (meetingLink !== '-') {
+                        if (!isAbsent) {
+                            yield this.bot.telegram.sendMessage(this.file.profile.chatId, 'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
+                            isAbsent = true;
+                        }
                         const classLink = yield this.scrapper.absent(meetingLink);
                         this.bot.telegram.sendMessage(this.file.profile.chatId, classLink);
                     }

@@ -5,17 +5,37 @@ import { CronJob } from 'cron';
 
 // TODO
 // Response Link When Absent
+// Edit Schedule
+// Edit Lat Long
 
 const main = async () => {
   let file: File = new File();
   file.read();
+  let browser: puppeteer.Browser;
 
-  const browser: puppeteer.Browser = await setupBrowser();
+  const openBrowser = new CronJob(
+    '* * 7-17 * * *',
+    async () => {
+      browser = await setupBrowser();
+      const page = await browser.newPage();
+      const bot: Bot = new Bot(file, page);
+      openBrowser.stop();
+    },
+    null,
+    true,
+    'Asia/Jakarta'
+  );
 
-  const page = await browser.newPage();
-
-  const bot: Bot = new Bot(file, page);
-  // await browser.close();
+  const closeBrowser = new CronJob(
+    '0 30 17-23,0-6 * * *',
+    async () => {
+      await browser.close();
+      closeBrowser.stop();
+    },
+    null,
+    true,
+    'Asia/Jakarta'
+  );
 };
 
 const setupBrowser = async () => {

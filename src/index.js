@@ -12,12 +12,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const puppeteer = require("puppeteer");
 const file_1 = require("./file");
 const bot_1 = require("./bot");
+const cron_1 = require("cron");
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     let file = new file_1.File();
     file.read();
-    const browser = yield setupBrowser();
-    const page = yield browser.newPage();
-    const bot = new bot_1.Bot(file, page);
+    let browser;
+    const openBrowser = new cron_1.CronJob('* * 7-17 * * *', () => __awaiter(void 0, void 0, void 0, function* () {
+        browser = yield setupBrowser();
+        const page = yield browser.newPage();
+        const bot = new bot_1.Bot(file, page);
+        openBrowser.stop();
+    }), null, true, 'Asia/Jakarta');
+    const closeBrowser = new cron_1.CronJob('0 30 17-23,0-6 * * *', () => __awaiter(void 0, void 0, void 0, function* () {
+        yield browser.close();
+        closeBrowser.stop();
+    }), null, true, 'Asia/Jakarta');
 });
 const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     const browser = yield puppeteer.launch({

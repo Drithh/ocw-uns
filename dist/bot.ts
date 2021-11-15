@@ -149,15 +149,20 @@ export class Bot {
           );
         }
       });
-      await this.bot.telegram.sendMessage(
-        this.file.profile.chatId,
-        'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan'
-      );
+      let isAbsent = false;
+
       for (const meetingLink of meetingLinks) {
         // if unix time
         if (/^\d+$/.test(meetingLink)) {
           this.addSchedule(parseInt(meetingLink));
         } else if (meetingLink !== '-') {
+          if (!isAbsent) {
+            await this.bot.telegram.sendMessage(
+              this.file.profile.chatId,
+              'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan'
+            );
+            isAbsent = true;
+          }
           const classLink: string = await this.scrapper.absent(meetingLink);
           this.bot.telegram.sendMessage(this.file.profile.chatId, classLink);
         }

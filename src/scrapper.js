@@ -128,7 +128,7 @@ class Scrapper {
             yield this.page.click('li button.btn-default');
             yield this.page.click('button#submit-lakukan-presensi');
             yield this.page.waitForNavigation({ waitUntil: 'networkidle2' });
-            const linkURL = this.page.url.toString();
+            const linkURL = this.page.url();
             yield this.page.goto('https://ocw.uns.ac.id/', {
                 waitUntil: 'networkidle2',
             });
