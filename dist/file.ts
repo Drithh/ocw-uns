@@ -1,46 +1,59 @@
 import * as fs from 'fs';
 
 export class File {
-  public profile = {
-    botToken: '',
-    chatId: '',
-    email: '',
-    password: '',
+  public settings = {
+    bot: {
+      botToken: '',
+      chatId: '',
+    },
+    profile: {
+      email: '',
+      password: '',
+    },
+    geolocation: {
+      latitude: '',
+      longitude: '',
+    },
+    schedule: {
+      startHour: '',
+      endHour: '',
+      minutes: '',
+    },
   };
 
   public edit(botToken: string, email: string, password: string) {
     if (botToken !== '-') {
-      this.profile.botToken = botToken;
+      this.settings.bot.botToken = botToken;
     }
     if (email !== '-') {
-      this.profile.email = email;
+      this.settings.profile.email = email;
     }
     if (password !== '-') {
-      this.profile.password = password;
+      this.settings.profile.password = password;
     }
     this.write();
   }
 
   public read() {
-    this.profile = JSON.parse(
+    this.settings = JSON.parse(
       fs.readFileSync('./profile.json', {
         encoding: 'utf8',
         flag: 'r',
       })
     );
-    if (this.profile.botToken === '') {
+    if (this.settings.bot.botToken === '') {
       this.readWriteBotToken();
     }
   }
 
   private readWriteBotToken() {
     var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
-    this.profile.botToken = botToken;
+    this.settings.bot.botToken = botToken;
     this.write();
   }
 
   public write = () => {
-    const jsonString = JSON.stringify(this.profile);
+    const jsonString = JSON.stringify(this.settings.profile);
     fs.writeFileSync('./profile.json', jsonString);
   };
 }

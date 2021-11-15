@@ -4,7 +4,6 @@ import { Bot } from './bot';
 import { CronJob } from 'cron';
 
 // TODO
-// Response Link When Absent
 // Edit Schedule
 // Edit Lat Long
 

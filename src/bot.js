@@ -23,17 +23,13 @@ class Bot {
         ])
             .resize()
             .oneTime();
-        this.wizardScene = new telegraf_1.Scenes.WizardScene('CONTACT_DATA_WIZARD_SCENE_ID', (ctx) => __awaiter(this, void 0, void 0, function* () {
+        this.editProfileScene = new telegraf_1.Scenes.WizardScene('PROFILE_EDIT_SCENE', (ctx) => __awaiter(this, void 0, void 0, function* () {
             yield ctx.reply("Jika tidak mau diubah masukan '-'");
-            yield ctx.reply('Masukkan Bot Token');
+            yield ctx.reply('Masukkan Email');
             ctx.wizard.state.contactData = {};
             return ctx.wizard.next();
         }), (ctx) => {
             ctx.wizard.state.contactData.botToken = ctx.message.text;
-            ctx.reply('Masukkan Email');
-            return ctx.wizard.next();
-        }, (ctx) => {
-            ctx.wizard.state.contactData.email = ctx.message.text;
             ctx.reply('Masukkan Password');
             return ctx.wizard.next();
         }, (ctx) => {
@@ -41,6 +37,17 @@ class Bot {
             ctx.reply('Terima Kasih');
             const newProfile = ctx.wizard.state.contactData;
             this.file.edit(newProfile.botToken, newProfile.email, newProfile.password);
+            return ctx.scene.leave();
+        });
+        this.wizardScene = new telegraf_1.Scenes.WizardScene('CONTACT_DATA_WIZARD_SCENE_ID', (ctx) => __awaiter(this, void 0, void 0, function* () {
+            yield ctx.reply("Jika tidak mau diubah masukan '-'");
+            yield ctx.reply('Masukkan Bot Token');
+            ctx.wizard.state.contactData = {};
+            return ctx.wizard.next();
+        }), (ctx) => {
+            if (ctx.message.text === 'Edit Profile') {
+                ctx.scene.enter('PROFILE_EDIT_SCENE');
+            }
             return ctx.scene.leave();
         });
         this.absent = () => __awaiter(this, void 0, void 0, function* () {

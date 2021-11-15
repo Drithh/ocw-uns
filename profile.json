@@ -1,6 +1,19 @@
 {
-  "botToken": "",
-  "chatId": "",
-  "email": "",
-  "password": ""
+  "bot": {
+    "botToken": "",
+    "chatId": ""
+  },
+  "profile": {
+    "email": "",
+    "password": ""
+  },
+  "geolocation": {
+    "latitude": "",
+    "longitude": ""
+  },
+  "schedule": {
+    "startHour": "",
+    "endHour": "",
+    "minutes": ""
+  }
 }
