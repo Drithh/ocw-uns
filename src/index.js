@@ -46,5 +46,9 @@ const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`Started ${browserVersion}`);
     return browser;
 });
+const coba = () => __awaiter(void 0, void 0, void 0, function* () {
+    let file = new file_1.File();
+    file.read();
+});
 main();
 //# sourceMappingURL=index.js.map

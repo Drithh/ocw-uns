@@ -7,7 +7,7 @@ import { CronJob } from 'cron';
 export class Bot {
   private mainMenuKeyboard = Markup.keyboard([
     Markup.button.text('Absen'),
-    Markup.button.text('Edit Profile'),
+    Markup.button.text('Edit Settings'),
   ])
     .resize()
     .oneTime();
@@ -28,12 +28,12 @@ export class Bot {
     (ctx: any) => {
       ctx.wizard.state.contactData.password = ctx.message.text;
       ctx.reply('Terima Kasih');
-      const newProfile = ctx.wizard.state.contactData;
-      this.file.edit(
-        newProfile.botToken,
-        newProfile.email,
-        newProfile.password
-      );
+      this.file.edit({
+        profile: {
+          email: ctx.wizard.state.contactData.email,
+          password: ctx.wizard.state.contactData.password,
+        },
+      });
       return ctx.scene.leave();
     }
   );
@@ -55,11 +55,7 @@ export class Bot {
       ctx.wizard.state.contactData.Longitude = ctx.message.text;
       ctx.reply('Terima Kasih');
       const newProfile = ctx.wizard.state.contactData;
-      this.file.edit(
-        newProfile.botToken,
-        newProfile.email,
-        newProfile.password
-      );
+      // this.file.edit(newProfile.Longitude, newProfile.Latitude);
       return ctx.scene.leave();
     }
   );
@@ -106,7 +102,7 @@ export class Bot {
     this.bot.use(session());
     this.bot.use(stage.middleware());
 
-    this.bot.hears('Edit Profile', async (ctx: any) => {
+    this.bot.hears('Edit Settings', async (ctx: any) => {
       ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
     });
 

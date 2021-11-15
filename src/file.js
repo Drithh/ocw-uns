@@ -4,41 +4,30 @@ exports.File = void 0;
 const fs = require("fs");
 class File {
     constructor() {
-        this.profile = {
-            botToken: '',
-            chatId: '',
-            email: '',
-            password: '',
-        };
         this.write = () => {
-            const jsonString = JSON.stringify(this.profile);
+            const jsonString = JSON.stringify(this.settings);
             fs.writeFileSync('./profile.json', jsonString);
         };
     }
-    edit(botToken, email, password) {
-        if (botToken !== '-') {
-            this.profile.botToken = botToken;
-        }
-        if (email !== '-') {
-            this.profile.email = email;
-        }
-        if (password !== '-') {
-            this.profile.password = password;
-        }
+    edit(object) {
+        const objectKey = Object.keys(object)[0];
+        Object.keys(object[objectKey]).forEach((key) => {
+            this.settings[objectKey][key] = object[objectKey][key];
+        });
         this.write();
     }
     read() {
-        this.profile = JSON.parse(fs.readFileSync('./profile.json', {
+        this.settings = JSON.parse(fs.readFileSync('./profile.json', {
             encoding: 'utf8',
             flag: 'r',
         }));
-        if (this.profile.botToken === '') {
+        if (this.settings.bot.botToken === '') {
             this.readWriteBotToken();
         }
     }
     readWriteBotToken() {
         var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
-        this.profile.botToken = botToken;
+        this.settings.bot.botToken = botToken;
         this.write();
     }
 }

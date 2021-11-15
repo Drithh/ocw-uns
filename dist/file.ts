@@ -1,36 +1,13 @@
 import * as fs from 'fs';
 
 export class File {
-  public settings = {
-    bot: {
-      botToken: '',
-      chatId: '',
-    },
-    profile: {
-      email: '',
-      password: '',
-    },
-    geolocation: {
-      latitude: '',
-      longitude: '',
-    },
-    schedule: {
-      startHour: '',
-      endHour: '',
-      minutes: '',
-    },
-  };
+  public settings: any;
 
-  public edit(botToken: string, email: string, password: string) {
-    if (botToken !== '-') {
-      this.settings.bot.botToken = botToken;
-    }
-    if (email !== '-') {
-      this.settings.profile.email = email;
-    }
-    if (password !== '-') {
-      this.settings.profile.password = password;
-    }
+  public edit(object: any) {
+    const objectKey = Object.keys(object)[0];
+    Object.keys(object[objectKey]).forEach((key) => {
+      this.settings[objectKey][key] = object[objectKey][key];
+    });
     this.write();
   }
 
@@ -53,7 +30,7 @@ export class File {
   }
 
   public write = () => {
-    const jsonString = JSON.stringify(this.settings.profile);
+    const jsonString = JSON.stringify(this.settings);
     fs.writeFileSync('./profile.json', jsonString);
   };
 }

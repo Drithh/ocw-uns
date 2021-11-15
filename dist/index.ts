@@ -56,4 +56,11 @@ const setupBrowser = async () => {
   return browser;
 };
 
+const coba = async () => {
+  let file: File = new File();
+  file.read();
+};
+
+// coba();
+
 main();
