@@ -12,7 +12,9 @@ class File {
     edit(object) {
         const objectKey = Object.keys(object)[0];
         Object.keys(object[objectKey]).forEach((key) => {
-            this.settings[objectKey][key] = object[objectKey][key];
+            if (object[objectKey][key] !== '-') {
+                this.settings[objectKey][key] = object[objectKey][key];
+            }
         });
         this.write();
     }

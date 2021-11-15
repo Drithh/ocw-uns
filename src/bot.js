@@ -23,13 +23,20 @@ class Bot {
         ])
             .resize()
             .oneTime();
+        this.settingsMenuKeyboard = telegraf_1.Markup.keyboard([
+            telegraf_1.Markup.button.text('Edit Profile'),
+            telegraf_1.Markup.button.text('Edit Geolocation'),
+            telegraf_1.Markup.button.text('Edit Schedule'),
+        ])
+            .resize()
+            .oneTime();
         this.editProfileScene = new telegraf_1.Scenes.WizardScene('PROFILE_EDIT_SCENE', (ctx) => __awaiter(this, void 0, void 0, function* () {
             yield ctx.reply("Jika tidak mau diubah masukan '-'");
             yield ctx.reply('Masukkan Email');
             ctx.wizard.state.contactData = {};
             return ctx.wizard.next();
         }), (ctx) => {
-            ctx.wizard.state.contactData.botToken = ctx.message.text;
+            ctx.wizard.state.contactData.email = ctx.message.text;
             ctx.reply('Masukkan Password');
             return ctx.wizard.next();
         }, (ctx) => {
@@ -49,23 +56,58 @@ class Bot {
             ctx.wizard.state.contactData = {};
             return ctx.wizard.next();
         }), (ctx) => {
-            ctx.wizard.state.contactData.Latitude = ctx.message.text;
+            ctx.wizard.state.contactData.latitude = ctx.message.text;
             ctx.reply('Masukkan Longitude');
             return ctx.wizard.next();
         }, (ctx) => {
-            ctx.wizard.state.contactData.Longitude = ctx.message.text;
+            ctx.wizard.state.contactData.longitude = ctx.message.text;
             ctx.reply('Terima Kasih');
-            const newProfile = ctx.wizard.state.contactData;
+            this.file.edit({
+                geolocation: {
+                    latitude: ctx.wizard.state.contactData.latitude,
+                    longitude: ctx.wizard.state.contactData.longitude,
+                },
+            });
             return ctx.scene.leave();
         });
-        this.wizardScene = new telegraf_1.Scenes.WizardScene('CONTACT_DATA_WIZARD_SCENE_ID', (ctx) => __awaiter(this, void 0, void 0, function* () {
+        this.editScheduleScene = new telegraf_1.Scenes.WizardScene('SCHEDULE_EDIT_SCENE', (ctx) => __awaiter(this, void 0, void 0, function* () {
             yield ctx.reply("Jika tidak mau diubah masukan '-'");
-            yield ctx.reply('Masukkan Bot Token');
+            yield ctx.reply('Masukkan Jam Mulai');
+            ctx.wizard.state.contactData = {};
+            return ctx.wizard.next();
+        }), (ctx) => {
+            ctx.wizard.state.contactData.startHour = ctx.message.text;
+            ctx.reply('Masukkan Jam Akhir');
+            return ctx.wizard.next();
+        }, (ctx) => {
+            ctx.wizard.state.contactData.endHour = ctx.message.text;
+            ctx.reply('Setiap Berapa Menit Sekali');
+            return ctx.wizard.next();
+        }, (ctx) => {
+            ctx.wizard.state.contactData.minutes = ctx.message.text;
+            ctx.reply('Terima Kasih');
+            this.file.edit({
+                schedule: {
+                    startHour: ctx.wizard.state.contactData.startHour,
+                    endHour: ctx.wizard.state.contactData.endHour,
+                    minutes: ctx.wizard.state.contactData.minutes,
+                },
+            });
+            return ctx.scene.leave();
+        });
+        this.wizardScene = new telegraf_1.Scenes.WizardScene('MAIN_MENU_SCENE', (ctx) => __awaiter(this, void 0, void 0, function* () {
+            yield ctx.reply('Pilih Settings Yang Mau Diubah', this.settingsMenuKeyboard);
             ctx.wizard.state.contactData = {};
             return ctx.wizard.next();
         }), (ctx) => {
             if (ctx.message.text === 'Edit Profile') {
                 ctx.scene.enter('PROFILE_EDIT_SCENE');
+            }
+            if (ctx.message.text === 'Edit Geolocation') {
+                ctx.scene.enter('GEOLOCATION_EDIT_SCENE');
+            }
+            if (ctx.message.text === 'Edit Schedule') {
+                ctx.scene.enter('SCHEDULE_EDIT_SCENE');
             }
             return ctx.scene.leave();
         });
@@ -122,7 +164,7 @@ class Bot {
             });
             courseStartTime.start();
         };
-        this.scrapper = new scrapper_1.Scrapper(page, file.settings.profile.email, file.settings.profile.password);
+        this.scrapper = new scrapper_1.Scrapper(page, file.settings);
         this.bot = new telegraf_1.Telegraf(file.settings.bot.botToken);
         this.bot.command('start', (ctx) => {
             if (file.settings.bot.chatId !== String(ctx.from.id)) {
@@ -131,14 +173,18 @@ class Bot {
             }
             ctx.reply('List Command', this.mainMenuKeyboard);
         });
-        this.bot.hears('Absen', (ctx) => __awaiter(this, void 0, void 0, function* () {
+        this.bot.hears('Absen', () => __awaiter(this, void 0, void 0, function* () {
             this.absent();
         }));
-        const stage = new telegraf_1.Scenes.Stage([this.wizardScene]);
-        this.bot.use((0, telegraf_1.session)());
-        this.bot.use(stage.middleware());
+        const stage = new telegraf_1.Scenes.Stage([
+            this.wizardScene,
+            this.editProfileScene,
+            this.editGeolocationScene,
+            this.editScheduleScene,
+        ]);
+        this.bot.use((0, telegraf_1.session)(), stage.middleware());
         this.bot.hears('Edit Settings', (ctx) => __awaiter(this, void 0, void 0, function* () {
-            ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
+            ctx.scene.enter('MAIN_MENU_SCENE');
         }));
         this.bot.launch().then(() => {
             if (file.settings.bot.chatId) {

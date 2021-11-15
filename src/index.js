@@ -17,17 +17,32 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     let file = new file_1.File();
     file.read();
     let browser;
-    const openBrowser = new cron_1.CronJob('* * 7-17 * * *', () => __awaiter(void 0, void 0, void 0, function* () {
+    const [awakeTime, sleepTime] = settingsJob(file);
+    const openBrowser = new cron_1.CronJob(awakeTime, () => __awaiter(void 0, void 0, void 0, function* () {
         browser = yield setupBrowser();
         const page = yield browser.newPage();
         const bot = new bot_1.Bot(file, page);
         openBrowser.stop();
     }), null, true, 'Asia/Jakarta');
-    const closeBrowser = new cron_1.CronJob('0 30 17-23,0-6 * * *', () => __awaiter(void 0, void 0, void 0, function* () {
+    const closeBrowser = new cron_1.CronJob(sleepTime, () => __awaiter(void 0, void 0, void 0, function* () {
         yield browser.close();
         closeBrowser.stop();
     }), null, true, 'Asia/Jakarta');
 });
+const settingsJob = (file) => {
+    const schedule = file.settings.schedule;
+    let awake;
+    let sleep;
+    if (parseInt(schedule.startHour) < parseInt(schedule.endHour)) {
+        awake = `* * ${schedule.startHour}-${schedule.endHour} * * *`;
+        sleep = `* 30 ${schedule.endHour}-23,0-${schedule.startHour - 1} * * *`;
+    }
+    else {
+        sleep = `* * ${schedule.startHour}-23,0-${schedule.endHour} * * *`;
+        awake = `* 30 ${schedule.endHour}-${schedule.startHour - 1} * * *`;
+    }
+    return [awake, sleep];
+};
 const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     const browser = yield puppeteer.launch({
         headless: true,

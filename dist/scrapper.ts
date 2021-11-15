@@ -3,11 +3,7 @@ import * as puppeteer from 'puppeteer';
 export class Scrapper {
   private alphaCourseLinks: (string | string[])[][] = new Array();
 
-  constructor(
-    private page: puppeteer.Page,
-    private email: string,
-    private password: string
-  ) {}
+  constructor(private page: puppeteer.Page, private settings: any) {}
 
   public login = async () => {
     const response = await this.page.goto('https://ocw.uns.ac.id/saml/login', {
@@ -16,10 +12,13 @@ export class Scrapper {
 
     // Ketika Belum Login
     if (response.request().redirectChain()[0].url().match('login')) {
-      await this.page.type('input.form-control[type="text"]', this.email);
+      await this.page.type(
+        'input.form-control[type="text"]',
+        this.settings.profile.email
+      );
       await this.page.type(
         'input.form-control[type="password"]',
-        this.password
+        this.settings.profile.password
       );
       await this.page.click('.btn-flat');
       return 'Login Berhasil';
@@ -167,8 +166,8 @@ export class Scrapper {
     });
 
     await this.page.setGeolocation({
-      latitude: -7.7049,
-      longitude: 110.6019,
+      latitude: parseFloat(this.settings.geolocation.latitude),
+      longitude: parseFloat(this.settings.geolocation.longitude),
     });
 
     await this.page.click('li button.btn-default');

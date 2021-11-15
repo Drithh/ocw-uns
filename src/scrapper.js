@@ -11,18 +11,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scrapper = void 0;
 class Scrapper {
-    constructor(page, email, password) {
+    constructor(page, settings) {
         this.page = page;
-        this.email = email;
-        this.password = password;
+        this.settings = settings;
         this.alphaCourseLinks = new Array();
         this.login = () => __awaiter(this, void 0, void 0, function* () {
             const response = yield this.page.goto('https://ocw.uns.ac.id/saml/login', {
                 waitUntil: 'networkidle2',
             });
             if (response.request().redirectChain()[0].url().match('login')) {
-                yield this.page.type('input.form-control[type="text"]', this.email);
-                yield this.page.type('input.form-control[type="password"]', this.password);
+                yield this.page.type('input.form-control[type="text"]', this.settings.profile.email);
+                yield this.page.type('input.form-control[type="password"]', this.settings.profile.password);
                 yield this.page.click('.btn-flat');
                 return 'Login Berhasil';
             }
@@ -122,8 +121,8 @@ class Scrapper {
                 waitUntil: 'networkidle2',
             });
             yield this.page.setGeolocation({
-                latitude: -7.7049,
-                longitude: 110.6019,
+                latitude: parseFloat(this.settings.geolocation.latitude),
+                longitude: parseFloat(this.settings.geolocation.longitude),
             });
             yield this.page.click('li button.btn-default');
             yield this.page.click('button#submit-lakukan-presensi');

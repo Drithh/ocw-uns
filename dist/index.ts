@@ -4,16 +4,15 @@ import { Bot } from './bot';
 import { CronJob } from 'cron';
 
 // TODO
-// Edit Schedule
-// Edit Lat Long
 
 const main = async () => {
   let file: File = new File();
   file.read();
   let browser: puppeteer.Browser;
+  const [awakeTime, sleepTime] = settingsJob(file);
 
   const openBrowser = new CronJob(
-    '* * 7-17 * * *',
+    awakeTime,
     async () => {
       browser = await setupBrowser();
       const page = await browser.newPage();
@@ -26,7 +25,7 @@ const main = async () => {
   );
 
   const closeBrowser = new CronJob(
-    '0 30 17-23,0-6 * * *',
+    sleepTime,
     async () => {
       await browser.close();
       closeBrowser.stop();
@@ -35,6 +34,21 @@ const main = async () => {
     true,
     'Asia/Jakarta'
   );
+};
+
+const settingsJob = (file: File) => {
+  const schedule = file.settings.schedule;
+  let awake: string;
+  let sleep: string;
+  if (parseInt(schedule.startHour) < parseInt(schedule.endHour)) {
+    awake = `* * ${schedule.startHour}-${schedule.endHour} * * *`;
+    sleep = `* 30 ${schedule.endHour}-23,0-${schedule.startHour - 1} * * *`;
+  } else {
+    sleep = `* * ${schedule.startHour}-23,0-${schedule.endHour} * * *`;
+    awake = `* 30 ${schedule.endHour}-${schedule.startHour - 1} * * *`;
+  }
+
+  return [awake, sleep];
 };
 
 const setupBrowser = async () => {

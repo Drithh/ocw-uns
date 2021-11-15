@@ -12,6 +12,13 @@ export class Bot {
     .resize()
     .oneTime();
 
+  private settingsMenuKeyboard = Markup.keyboard([
+    Markup.button.text('Edit Profile'),
+    Markup.button.text('Edit Geolocation'),
+    Markup.button.text('Edit Schedule'),
+  ])
+    .resize()
+    .oneTime();
   private editProfileScene: any = new Scenes.WizardScene(
     'PROFILE_EDIT_SCENE',
     async (ctx: any) => {
@@ -21,7 +28,7 @@ export class Bot {
       return ctx.wizard.next();
     },
     (ctx: any) => {
-      ctx.wizard.state.contactData.botToken = ctx.message.text;
+      ctx.wizard.state.contactData.email = ctx.message.text;
       ctx.reply('Masukkan Password');
       return ctx.wizard.next();
     },
@@ -47,30 +54,74 @@ export class Bot {
       return ctx.wizard.next();
     },
     (ctx: any) => {
-      ctx.wizard.state.contactData.Latitude = ctx.message.text;
+      ctx.wizard.state.contactData.latitude = ctx.message.text;
       ctx.reply('Masukkan Longitude');
       return ctx.wizard.next();
     },
     (ctx: any) => {
-      ctx.wizard.state.contactData.Longitude = ctx.message.text;
+      ctx.wizard.state.contactData.longitude = ctx.message.text;
       ctx.reply('Terima Kasih');
-      const newProfile = ctx.wizard.state.contactData;
-      // this.file.edit(newProfile.Longitude, newProfile.Latitude);
+      this.file.edit({
+        geolocation: {
+          latitude: ctx.wizard.state.contactData.latitude,
+          longitude: ctx.wizard.state.contactData.longitude,
+        },
+      });
+      return ctx.scene.leave();
+    }
+  );
+
+  private editScheduleScene: any = new Scenes.WizardScene(
+    'SCHEDULE_EDIT_SCENE',
+    async (ctx: any) => {
+      await ctx.reply("Jika tidak mau diubah masukan '-'");
+      await ctx.reply('Masukkan Jam Mulai');
+      ctx.wizard.state.contactData = {};
+      return ctx.wizard.next();
+    },
+    (ctx: any) => {
+      ctx.wizard.state.contactData.startHour = ctx.message.text;
+      ctx.reply('Masukkan Jam Akhir');
+      return ctx.wizard.next();
+    },
+    (ctx: any) => {
+      ctx.wizard.state.contactData.endHour = ctx.message.text;
+      ctx.reply('Setiap Berapa Menit Sekali');
+      return ctx.wizard.next();
+    },
+    (ctx: any) => {
+      ctx.wizard.state.contactData.minutes = ctx.message.text;
+      ctx.reply('Terima Kasih');
+      this.file.edit({
+        schedule: {
+          startHour: ctx.wizard.state.contactData.startHour,
+          endHour: ctx.wizard.state.contactData.endHour,
+          minutes: ctx.wizard.state.contactData.minutes,
+        },
+      });
       return ctx.scene.leave();
     }
   );
 
   private wizardScene: any = new Scenes.WizardScene(
-    'CONTACT_DATA_WIZARD_SCENE_ID',
+    'MAIN_MENU_SCENE',
     async (ctx: any) => {
-      await ctx.reply("Jika tidak mau diubah masukan '-'");
-      await ctx.reply('Masukkan Bot Token');
+      await ctx.reply(
+        'Pilih Settings Yang Mau Diubah',
+        this.settingsMenuKeyboard
+      );
       ctx.wizard.state.contactData = {};
       return ctx.wizard.next();
     },
     (ctx: any) => {
       if (ctx.message.text === 'Edit Profile') {
         ctx.scene.enter('PROFILE_EDIT_SCENE');
+      }
+      if (ctx.message.text === 'Edit Geolocation') {
+        ctx.scene.enter('GEOLOCATION_EDIT_SCENE');
+      }
+      if (ctx.message.text === 'Edit Schedule') {
+        ctx.scene.enter('SCHEDULE_EDIT_SCENE');
       }
       return ctx.scene.leave();
     }
@@ -79,12 +130,7 @@ export class Bot {
   private bot: Telegraf;
   private scrapper: Scrapper;
   constructor(private file: File, private page: puppeteer.Page) {
-    this.scrapper = new Scrapper(
-      page,
-      file.settings.profile.email,
-      file.settings.profile.password
-    );
-
+    this.scrapper = new Scrapper(page, file.settings);
     this.bot = new Telegraf(file.settings.bot.botToken);
     this.bot.command('start', (ctx) => {
       if (file.settings.bot.chatId !== String(ctx.from.id)) {
@@ -94,16 +140,20 @@ export class Bot {
       ctx.reply('List Command', this.mainMenuKeyboard);
     });
 
-    this.bot.hears('Absen', async (ctx) => {
+    this.bot.hears('Absen', async () => {
       this.absent();
     });
 
-    const stage: any = new Scenes.Stage([this.wizardScene]);
-    this.bot.use(session());
-    this.bot.use(stage.middleware());
+    const stage: any = new Scenes.Stage([
+      this.wizardScene,
+      this.editProfileScene,
+      this.editGeolocationScene,
+      this.editScheduleScene,
+    ]);
+    this.bot.use(session(), stage.middleware());
 
     this.bot.hears('Edit Settings', async (ctx: any) => {
-      ctx.scene.enter('CONTACT_DATA_WIZARD_SCENE_ID');
+      ctx.scene.enter('MAIN_MENU_SCENE');
     });
 
     this.bot.launch().then(() => {
