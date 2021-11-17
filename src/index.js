@@ -47,7 +47,7 @@ const settingsJob = (file) => {
 };
 const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     const browser = yield puppeteer.launch({
-        headless: true,
+        headless: false,
         userDataDir: './cache',
         args: [
             '--no-sandbox',

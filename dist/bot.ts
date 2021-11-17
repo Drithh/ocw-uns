@@ -35,14 +35,12 @@ export class Bot {
     },
     (ctx: any) => {
       ctx.wizard.state.contactData.password = ctx.message.text;
-      ctx.reply('Terima Kasih');
       this.file.edit({
         profile: {
           email: ctx.wizard.state.contactData.email,
           password: ctx.wizard.state.contactData.password,
         },
       });
-      return ctx.scene.leave();
     }
   );
 
@@ -61,14 +59,12 @@ export class Bot {
     },
     (ctx: any) => {
       ctx.wizard.state.contactData.longitude = ctx.message.text;
-      ctx.reply('Terima Kasih');
       this.file.edit({
         geolocation: {
           latitude: ctx.wizard.state.contactData.latitude,
           longitude: ctx.wizard.state.contactData.longitude,
         },
       });
-      return ctx.scene.leave();
     }
   );
 
@@ -92,7 +88,6 @@ export class Bot {
     },
     (ctx: any) => {
       ctx.wizard.state.contactData.minutes = ctx.message.text;
-      ctx.reply('Terima Kasih');
       this.file.edit({
         schedule: {
           startHour: ctx.wizard.state.contactData.startHour,
@@ -100,7 +95,6 @@ export class Bot {
           minutes: ctx.wizard.state.contactData.minutes,
         },
       });
-      return ctx.scene.leave();
     }
   );
 
@@ -124,6 +118,7 @@ export class Bot {
       if (ctx.message.text === 'Edit Schedule') {
         ctx.scene.enter('SCHEDULE_EDIT_SCENE');
       }
+      ctx.reply('Terima Kasih', this.mainMenuKeyboard);
       return ctx.scene.leave();
     }
   );
@@ -132,6 +127,9 @@ export class Bot {
   private scrapper: Scrapper;
   private absentText: string;
   private messageInfoID: number;
+  private summaryID: number;
+
+  private todaysSummary = { loginCount: 0, linkMeets: new Array() };
 
   private updateMessage = async () => {
     await this.bot.telegram.editMessageText(
@@ -140,6 +138,47 @@ export class Bot {
       undefined,
       this.absentText
     );
+  };
+
+  private sendSummary = async () => {
+    const days = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
+    this.todaysSummary.loginCount++;
+    let date = new Date();
+    let time =
+      date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+    let summaryText: string =
+      days[date.getDay()] +
+      'Summary\n' +
+      'Login Count: ' +
+      this.todaysSummary.loginCount +
+      '\nLast Check: ' +
+      time +
+      '\n';
+    this.todaysSummary.linkMeets.forEach((linkMeet) => {
+      summaryText += linkMeet + '\n';
+    });
+    if (this.summaryID) {
+      this.bot.telegram.editMessageText(
+        this.file.settings.bot.chatId,
+        this.summaryID,
+        undefined,
+        summaryText
+      );
+    } else {
+      this.bot.telegram
+        .sendMessage(this.file.settings.bot.chatId, summaryText)
+        .then((ctx) => {
+          this.summaryID = ctx.message_id;
+        });
+    }
   };
 
   constructor(private file: File, private page: puppeteer.Page) {
@@ -261,13 +300,14 @@ export class Bot {
         if (/^\d+$/.test(meetingLink)) {
           this.addSchedule(parseInt(meetingLink));
         } else if (meetingLink !== '-') {
+          // Try Absent meeting
           if (!isAbsent) {
             this.absentText +=
               'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan\n';
-
             await this.updateMessage();
             isAbsent = true;
           }
+          this.todaysSummary.linkMeets.push(meetingLink);
           const classLink: string = await this.scrapper.absent(meetingLink);
           this.bot.telegram.sendMessage(
             this.file.settings.bot.chatId,
@@ -279,6 +319,7 @@ export class Bot {
       this.absentText += 'Tidak Terdapat Alpha\nSelamat!';
       await this.updateMessage();
     }
+    this.sendSummary();
     let deleteMessageTime = new Date();
     deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 5);
     new CronJob(

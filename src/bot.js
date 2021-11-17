@@ -41,14 +41,12 @@ class Bot {
             return ctx.wizard.next();
         }, (ctx) => {
             ctx.wizard.state.contactData.password = ctx.message.text;
-            ctx.reply('Terima Kasih');
             this.file.edit({
                 profile: {
                     email: ctx.wizard.state.contactData.email,
                     password: ctx.wizard.state.contactData.password,
                 },
             });
-            return ctx.scene.leave();
         });
         this.editGeolocationScene = new telegraf_1.Scenes.WizardScene('GEOLOCATION_EDIT_SCENE', (ctx) => __awaiter(this, void 0, void 0, function* () {
             yield ctx.reply("Jika tidak mau diubah masukan '-'");
@@ -61,14 +59,12 @@ class Bot {
             return ctx.wizard.next();
         }, (ctx) => {
             ctx.wizard.state.contactData.longitude = ctx.message.text;
-            ctx.reply('Terima Kasih');
             this.file.edit({
                 geolocation: {
                     latitude: ctx.wizard.state.contactData.latitude,
                     longitude: ctx.wizard.state.contactData.longitude,
                 },
             });
-            return ctx.scene.leave();
         });
         this.editScheduleScene = new telegraf_1.Scenes.WizardScene('SCHEDULE_EDIT_SCENE', (ctx) => __awaiter(this, void 0, void 0, function* () {
             yield ctx.reply("Jika tidak mau diubah masukan '-'");
@@ -85,7 +81,6 @@ class Bot {
             return ctx.wizard.next();
         }, (ctx) => {
             ctx.wizard.state.contactData.minutes = ctx.message.text;
-            ctx.reply('Terima Kasih');
             this.file.edit({
                 schedule: {
                     startHour: ctx.wizard.state.contactData.startHour,
@@ -93,7 +88,6 @@ class Bot {
                     minutes: ctx.wizard.state.contactData.minutes,
                 },
             });
-            return ctx.scene.leave();
         });
         this.wizardScene = new telegraf_1.Scenes.WizardScene('MAIN_MENU_SCENE', (ctx) => __awaiter(this, void 0, void 0, function* () {
             yield ctx.reply('Pilih Settings Yang Mau Diubah', this.settingsMenuKeyboard);
@@ -109,10 +103,36 @@ class Bot {
             if (ctx.message.text === 'Edit Schedule') {
                 ctx.scene.enter('SCHEDULE_EDIT_SCENE');
             }
+            ctx.reply('Terima Kasih', this.mainMenuKeyboard);
             return ctx.scene.leave();
         });
+        this.todaysSummary = { loginCount: 0, linkMeets: new Array() };
         this.updateMessage = () => __awaiter(this, void 0, void 0, function* () {
             yield this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.messageInfoID, undefined, this.absentText);
+        });
+        this.sendSummary = () => __awaiter(this, void 0, void 0, function* () {
+            this.todaysSummary.loginCount++;
+            let date = new Date();
+            let time = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+            let summaryText = '========AUTO ABSEN========\n' +
+                'Login Count: ' +
+                this.todaysSummary.loginCount +
+                '\nLast Check: ' +
+                time +
+                '\n';
+            this.todaysSummary.linkMeets.forEach((linkMeet) => {
+                summaryText += linkMeet + '\n';
+            });
+            if (this.summaryID) {
+                this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.summaryID, undefined, summaryText);
+            }
+            else {
+                this.bot.telegram
+                    .sendMessage(this.file.settings.bot.chatId, summaryText)
+                    .then((ctx) => {
+                    this.summaryID = ctx.message_id;
+                });
+            }
         });
         this.absent = () => __awaiter(this, void 0, void 0, function* () {
             if (this.file.settings.profile.email === '') {
@@ -170,6 +190,7 @@ class Bot {
                             yield this.updateMessage();
                             isAbsent = true;
                         }
+                        this.todaysSummary.linkMeets.push(meetingLink);
                         const classLink = yield this.scrapper.absent(meetingLink);
                         this.bot.telegram.sendMessage(this.file.settings.bot.chatId, classLink);
                     }
@@ -179,17 +200,18 @@ class Bot {
                 this.absentText += 'Tidak Terdapat Alpha\nSelamat!';
                 yield this.updateMessage();
             }
+            this.sendSummary();
             let deleteMessageTime = new Date();
-            deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 1);
+            deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 5);
             new cron_1.CronJob(deleteMessageTime, () => {
                 this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageInfoID);
             }, undefined, true);
         });
         this.addSchedule = (unixTime) => {
-            const courseStartTime = new cron_1.CronJob(new Date(unixTime), () => {
+            console.log(new Date(unixTime));
+            new cron_1.CronJob(new Date(unixTime), () => {
                 this.absent();
-            });
-            courseStartTime.start();
+            }, undefined, true);
         };
         this.scrapper = new scrapper_1.Scrapper(page, file.settings);
         this.bot = new telegraf_1.Telegraf(file.settings.bot.botToken);
