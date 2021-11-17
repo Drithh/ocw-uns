@@ -111,33 +111,52 @@ class Bot {
             }
             return ctx.scene.leave();
         });
+        this.updateMessage = () => __awaiter(this, void 0, void 0, function* () {
+            yield this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.messageId, undefined, this.absentText);
+        });
         this.absent = () => __awaiter(this, void 0, void 0, function* () {
             if (this.file.settings.profile.email === '') {
                 yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Isi Profile Terlebih Dahulu');
                 return;
             }
-            yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Mencoba login ' + this.file.settings.profile.email);
+            if (this.messageId !== undefined) {
+                this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageId);
+            }
+            this.absentText =
+                'Mencoba login ' + this.file.settings.profile.email + '\n';
+            yield this.bot.telegram
+                .sendMessage(this.file.settings.bot.chatId, this.absentText)
+                .then((ctx) => {
+                this.messageId = ctx.message_id;
+            });
             const loginMessage = yield this.scrapper.login();
-            yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, loginMessage, this.mainMenuKeyboard);
-            yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Mengecek Mata Kuliah Yang Alpha');
+            this.absentText += loginMessage + '\n';
+            yield this.updateMessage();
+            this.bot.telegram.sendMessage;
+            this.absentText += 'Mengecek Mata Kuliah Yang Alpha\n';
+            yield this.updateMessage();
             const count = yield this.scrapper.countAlpha();
             if (count > 0) {
-                yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Terdapat ' + count + ' Alpha');
-                yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Mengecek Apakah Kamu Benaran Alpha...');
+                this.absentText += 'Terdapat ' + count + ' Alpha\n';
+                yield this.updateMessage();
+                this.absentText += 'Mengecek Apakah Kamu Benaran Alpha...\n';
+                yield this.updateMessage();
                 const listAlpha = yield this.scrapper.listAlpha();
-                var messageStrings = listAlpha.map(function (tuple) {
+                var messageStrings = listAlpha.map((tuple) => {
                     return tuple[0];
                 });
-                var meetingLinks = listAlpha.map(function (tuple) {
+                var meetingLinks = listAlpha.map((tuple) => {
                     return tuple[1];
                 });
-                messageStrings.forEach((messageString, key, messageStrings) => {
-                    if (Object.is(messageStrings.length - 1, key)) {
-                        this.bot.telegram.sendMessage(this.file.settings.bot.chatId, messageString, this.mainMenuKeyboard);
-                    }
-                    else {
-                        this.bot.telegram.sendMessage(this.file.settings.bot.chatId, messageString);
-                    }
+                messageStrings.forEach((messageString) => {
+                    this.absentText += messageString + '\n';
+                    this.updateMessage();
+                });
+                this.bot.telegram
+                    .sendMessage(this.file.settings.bot.chatId, this.absentText, this.mainMenuKeyboard)
+                    .then((ctx) => {
+                    this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageId);
+                    this.messageId = ctx.message_id;
                 });
                 let isAbsent = false;
                 for (const meetingLink of meetingLinks) {
@@ -146,7 +165,9 @@ class Bot {
                     }
                     else if (meetingLink !== '-') {
                         if (!isAbsent) {
-                            yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan');
+                            this.absentText +=
+                                'Mencoba Absen Untuk Mata Kuliah Yang Sedang Berjalan\n';
+                            yield this.updateMessage();
                             isAbsent = true;
                         }
                         const classLink = yield this.scrapper.absent(meetingLink);
@@ -155,7 +176,8 @@ class Bot {
                 }
             }
             else {
-                yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Tidak Terdapat Alpha\nSelamat!');
+                this.absentText += 'Tidak Terdapat Alpha\nSelamat!';
+                yield this.updateMessage();
             }
         });
         this.addSchedule = (unixTime) => {
@@ -186,11 +208,11 @@ class Bot {
         this.bot.hears('Edit Settings', (ctx) => __awaiter(this, void 0, void 0, function* () {
             ctx.scene.enter('MAIN_MENU_SCENE');
         }));
-        this.bot.launch().then(() => {
+        this.bot.launch().then(() => __awaiter(this, void 0, void 0, function* () {
             if (file.settings.bot.chatId) {
-                this.bot.telegram.sendMessage(file.settings.bot.chatId, 'Senangnya Bisa Hidup Kembali :D', this.mainMenuKeyboard);
+                yield this.bot.telegram.sendMessage(file.settings.bot.chatId, 'Senangnya Bisa Hidup Kembali :D', this.mainMenuKeyboard);
             }
-        });
+        }));
         const job = new cron_1.CronJob('0 */15 7-17 * * *', () => {
             this.absent();
         }, null, true, 'Asia/Jakarta');

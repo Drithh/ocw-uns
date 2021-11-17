@@ -23,10 +23,12 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         const page = yield browser.newPage();
         const bot = new bot_1.Bot(file, page);
         openBrowser.stop();
+        closeBrowser.start();
     }), null, true, 'Asia/Jakarta');
     const closeBrowser = new cron_1.CronJob(sleepTime, () => __awaiter(void 0, void 0, void 0, function* () {
         yield browser.close();
         closeBrowser.stop();
+        openBrowser.start();
     }), null, true, 'Asia/Jakarta');
 });
 const settingsJob = (file) => {

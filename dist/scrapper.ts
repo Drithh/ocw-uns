@@ -1,5 +1,7 @@
 import * as puppeteer from 'puppeteer';
 
+
+
 export class Scrapper {
   private alphaCourseLinks: (string | string[])[][] = new Array();
 

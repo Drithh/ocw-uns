@@ -18,6 +18,7 @@ const main = async () => {
       const page = await browser.newPage();
       const bot: Bot = new Bot(file, page);
       openBrowser.stop();
+      closeBrowser.start();
     },
     null,
     true,
@@ -29,6 +30,7 @@ const main = async () => {
     async () => {
       await browser.close();
       closeBrowser.stop();
+      openBrowser.start();
     },
     null,
     true,
