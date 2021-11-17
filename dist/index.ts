@@ -73,8 +73,17 @@ const setupBrowser = async () => {
 };
 
 const coba = async () => {
-  let file: File = new File();
-  file.read();
+  let date = new Date();
+  date.setMinutes(date.getMinutes() + 1);
+  const job = new CronJob(
+    date,
+    () => {
+      const d = new Date();
+      console.log('Specific date:', date, ', onTick at:', d);
+    },
+    undefined,
+    true
+  );
 };
 
 // coba();

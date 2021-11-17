@@ -112,22 +112,22 @@ class Bot {
             return ctx.scene.leave();
         });
         this.updateMessage = () => __awaiter(this, void 0, void 0, function* () {
-            yield this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.messageId, undefined, this.absentText);
+            yield this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.messageInfoID, undefined, this.absentText);
         });
         this.absent = () => __awaiter(this, void 0, void 0, function* () {
             if (this.file.settings.profile.email === '') {
                 yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Isi Profile Terlebih Dahulu');
                 return;
             }
-            if (this.messageId !== undefined) {
-                this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageId);
+            if (this.messageInfoID !== undefined) {
+                this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageInfoID);
             }
             this.absentText =
                 'Mencoba login ' + this.file.settings.profile.email + '\n';
             yield this.bot.telegram
                 .sendMessage(this.file.settings.bot.chatId, this.absentText)
                 .then((ctx) => {
-                this.messageId = ctx.message_id;
+                this.messageInfoID = ctx.message_id;
             });
             const loginMessage = yield this.scrapper.login();
             this.absentText += loginMessage + '\n';
@@ -155,8 +155,8 @@ class Bot {
                 this.bot.telegram
                     .sendMessage(this.file.settings.bot.chatId, this.absentText, this.mainMenuKeyboard)
                     .then((ctx) => {
-                    this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageId);
-                    this.messageId = ctx.message_id;
+                    this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageInfoID);
+                    this.messageInfoID = ctx.message_id;
                 });
                 let isAbsent = false;
                 for (const meetingLink of meetingLinks) {
@@ -179,6 +179,11 @@ class Bot {
                 this.absentText += 'Tidak Terdapat Alpha\nSelamat!';
                 yield this.updateMessage();
             }
+            let deleteMessageTime = new Date();
+            deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 1);
+            new cron_1.CronJob(deleteMessageTime, () => {
+                this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageInfoID);
+            }, undefined, true);
         });
         this.addSchedule = (unixTime) => {
             const courseStartTime = new cron_1.CronJob(new Date(unixTime), () => {
@@ -213,7 +218,7 @@ class Bot {
                 yield this.bot.telegram.sendMessage(file.settings.bot.chatId, 'Senangnya Bisa Hidup Kembali :D', this.mainMenuKeyboard);
             }
         }));
-        const job = new cron_1.CronJob('0 */15 7-17 * * *', () => {
+        new cron_1.CronJob('0 */15 7-17 * * *', () => {
             this.absent();
         }, null, true, 'Asia/Jakarta');
     }

@@ -18,7 +18,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     file.read();
     let browser;
     const [awakeTime, sleepTime] = settingsJob(file);
-    const openBrowser = new cron_1.CronJob(awakeTime, () => __awaiter(void 0, void 0, void 0, function* () {
+    const openBrowser = new cron_1.CronJob('* * * * * *', () => __awaiter(void 0, void 0, void 0, function* () {
         browser = yield setupBrowser();
         const page = yield browser.newPage();
         const bot = new bot_1.Bot(file, page);
@@ -64,8 +64,12 @@ const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     return browser;
 });
 const coba = () => __awaiter(void 0, void 0, void 0, function* () {
-    let file = new file_1.File();
-    file.read();
+    let date = new Date();
+    date.setMinutes(date.getMinutes() + 1);
+    const job = new cron_1.CronJob(date, () => {
+        const d = new Date();
+        console.log('Specific date:', date, ', onTick at:', d);
+    }, undefined, true);
 });
 main();
 //# sourceMappingURL=index.js.map

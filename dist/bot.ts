@@ -131,12 +131,12 @@ export class Bot {
   private bot: Telegraf;
   private scrapper: Scrapper;
   private absentText: string;
-  private messageId: number;
+  private messageInfoID: number;
 
   private updateMessage = async () => {
     await this.bot.telegram.editMessageText(
       this.file.settings.bot.chatId,
-      this.messageId,
+      this.messageInfoID,
       undefined,
       this.absentText
     );
@@ -178,7 +178,7 @@ export class Bot {
         );
       }
     });
-    const job = new CronJob(
+    new CronJob(
       '0 */15 7-17 * * *',
       () => {
         this.absent();
@@ -197,10 +197,10 @@ export class Bot {
       );
       return;
     }
-    if (this.messageId !== undefined) {
+    if (this.messageInfoID !== undefined) {
       this.bot.telegram.deleteMessage(
         this.file.settings.bot.chatId,
-        this.messageId
+        this.messageInfoID
       );
     }
     this.absentText =
@@ -208,7 +208,7 @@ export class Bot {
     await this.bot.telegram
       .sendMessage(this.file.settings.bot.chatId, this.absentText)
       .then((ctx) => {
-        this.messageId = ctx.message_id;
+        this.messageInfoID = ctx.message_id;
       });
     const loginMessage: string = await this.scrapper.login();
     this.absentText += loginMessage + '\n';
@@ -249,9 +249,9 @@ export class Bot {
         .then((ctx) => {
           this.bot.telegram.deleteMessage(
             this.file.settings.bot.chatId,
-            this.messageId
+            this.messageInfoID
           );
-          this.messageId = ctx.message_id;
+          this.messageInfoID = ctx.message_id;
         });
 
       let isAbsent = false;
@@ -279,12 +279,30 @@ export class Bot {
       this.absentText += 'Tidak Terdapat Alpha\nSelamat!';
       await this.updateMessage();
     }
+    let deleteMessageTime = new Date();
+    deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 5);
+    new CronJob(
+      deleteMessageTime,
+      () => {
+        this.bot.telegram.deleteMessage(
+          this.file.settings.bot.chatId,
+          this.messageInfoID
+        );
+      },
+      undefined,
+      true
+    );
   };
 
   private addSchedule = (unixTime: number) => {
-    const courseStartTime = new CronJob(new Date(unixTime), () => {
-      this.absent();
-    });
-    courseStartTime.start();
+    console.log(new Date(unixTime));
+    new CronJob(
+      new Date(unixTime),
+      () => {
+        this.absent();
+      },
+      undefined,
+      true
+    );
   };
 }
