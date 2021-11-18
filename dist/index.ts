@@ -4,6 +4,7 @@ import { Bot } from './bot';
 import { CronJob } from 'cron';
 
 // TODO
+// Fix if (response.request().redirectChain()[0].url().match('login'))
 
 const main = async () => {
   let file: File = new File();

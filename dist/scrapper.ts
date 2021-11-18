@@ -1,6 +1,5 @@
+import moment = require('moment');
 import * as puppeteer from 'puppeteer';
-
-
 
 export class Scrapper {
   private alphaCourseLinks: (string | string[])[][] = new Array();
@@ -134,7 +133,7 @@ export class Scrapper {
       // Belum Absen
       const Messages = ['Kuliah Sedang Berjalan ', 'Kuliah Belum Dimulai '];
       courseSchedules.forEach((courseSchedule: any) => {
-        const [courseName, [courseStartTime, courseEndTime, meetingLink]] =
+        let [courseName, [courseStartTime, courseEndTime, meetingLink]] =
           courseSchedule;
         const scheduleCond =
           currentTime > courseStartTime && currentTime < courseEndTime
@@ -152,8 +151,8 @@ export class Scrapper {
               new Date(courseStartTime).toLocaleDateString('en-US'),
             scheduleCond == 0
               ? meetingLink
-              : scheduleCond == 1 && courseStartTime - currentTime < 900000
-              ? 'soon'
+              : scheduleCond == 1
+              ? courseStartTime
               : '-',
           ]);
         }

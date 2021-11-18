@@ -91,7 +91,7 @@ class Scrapper {
                 });
                 const Messages = ['Kuliah Sedang Berjalan ', 'Kuliah Belum Dimulai '];
                 courseSchedules.forEach((courseSchedule) => {
-                    const [courseName, [courseStartTime, courseEndTime, meetingLink]] = courseSchedule;
+                    let [courseName, [courseStartTime, courseEndTime, meetingLink]] = courseSchedule;
                     const scheduleCond = currentTime > courseStartTime && currentTime < courseEndTime
                         ? 0
                         : currentTime < courseStartTime
@@ -107,8 +107,8 @@ class Scrapper {
                                 new Date(courseStartTime).toLocaleDateString('en-US'),
                             scheduleCond == 0
                                 ? meetingLink
-                                : scheduleCond == 1 && courseStartTime - currentTime < 900000
-                                    ? 'soon'
+                                : scheduleCond == 1
+                                    ? courseStartTime
                                     : '-',
                         ]);
                     }

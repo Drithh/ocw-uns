@@ -13,6 +13,7 @@ exports.Bot = void 0;
 const scrapper_1 = require("./scrapper");
 const telegraf_1 = require("telegraf");
 const cron_1 = require("cron");
+const moment = require("moment-timezone");
 class Bot {
     constructor(file, page) {
         this.file = file;
@@ -121,8 +122,8 @@ class Bot {
                 'Saturday',
             ];
             this.todaysSummary.loginCount++;
-            let date = new Date();
-            let time = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+            var time = moment(new Date()).tz('Asia/Jakarta').format('HH:mm:ss');
+            const date = new Date();
             let summaryText = days[date.getDay()] +
                 ' Summary\n' +
                 'Login Count: ' +
@@ -133,16 +134,11 @@ class Bot {
             this.todaysSummary.linkMeets.forEach((linkMeet) => {
                 summaryText += linkMeet + '\n';
             });
-            if (this.summaryID) {
-                this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.summaryID, undefined, summaryText);
-            }
-            else {
-                this.bot.telegram
-                    .sendMessage(this.file.settings.bot.chatId, summaryText)
-                    .then((ctx) => {
-                    this.summaryID = ctx.message_id;
-                });
-            }
+            this.bot.telegram
+                .sendMessage(this.file.settings.bot.chatId, summaryText, this.mainMenuKeyboard)
+                .then((ctx) => {
+                this.summaryID = ctx.message_id;
+            });
         });
         this.absent = () => __awaiter(this, void 0, void 0, function* () {
             if (this.file.settings.profile.email === '') {
@@ -179,12 +175,6 @@ class Bot {
                     this.absentText += messageString + '\n';
                     this.updateMessage();
                 });
-                this.bot.telegram
-                    .sendMessage(this.file.settings.bot.chatId, this.absentText, this.mainMenuKeyboard)
-                    .then((ctx) => {
-                    this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageInfoID);
-                    this.messageInfoID = ctx.message_id;
-                });
                 let isAbsent = false;
                 for (const meetingLink of meetingLinks) {
                     if (/^\d+$/.test(meetingLink)) {
@@ -197,9 +187,8 @@ class Bot {
                             yield this.updateMessage();
                             isAbsent = true;
                         }
-                        this.todaysSummary.linkMeets.push(meetingLink);
                         const classLink = yield this.scrapper.absent(meetingLink);
-                        this.bot.telegram.sendMessage(this.file.settings.bot.chatId, classLink);
+                        this.todaysSummary.linkMeets.push(classLink);
                     }
                 }
             }
@@ -209,14 +198,15 @@ class Bot {
             }
             this.sendSummary();
             let deleteMessageTime = new Date();
-            deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 5);
+            deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 1);
             new cron_1.CronJob(deleteMessageTime, () => {
                 this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageInfoID);
             }, undefined, true);
         });
         this.addSchedule = (unixTime) => {
-            console.log(new Date(unixTime));
             new cron_1.CronJob(new Date(unixTime), () => {
+                console.log(new Date(unixTime));
+                console.log(new Date());
                 this.absent();
             }, undefined, true);
         };

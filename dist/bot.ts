@@ -3,6 +3,7 @@ import * as puppeteer from 'puppeteer';
 import { Telegraf, Scenes, Markup, session, Context } from 'telegraf';
 import { File } from './file';
 import { CronJob } from 'cron';
+import moment = require('moment-timezone');
 
 export class Bot {
   private mainMenuKeyboard = Markup.keyboard([
@@ -151,9 +152,8 @@ export class Bot {
       'Saturday',
     ];
     this.todaysSummary.loginCount++;
-    let date = new Date();
-    let time =
-      date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+    var time = moment(new Date()).tz('Asia/Jakarta').format('HH:mm:ss');
+    const date = new Date();
     let summaryText: string =
       days[date.getDay()] +
       ' Summary\n' +
@@ -165,20 +165,15 @@ export class Bot {
     this.todaysSummary.linkMeets.forEach((linkMeet) => {
       summaryText += linkMeet + '\n';
     });
-    if (this.summaryID) {
-      this.bot.telegram.editMessageText(
+    this.bot.telegram
+      .sendMessage(
         this.file.settings.bot.chatId,
-        this.summaryID,
-        undefined,
-        summaryText
-      );
-    } else {
-      this.bot.telegram
-        .sendMessage(this.file.settings.bot.chatId, summaryText)
-        .then((ctx) => {
-          this.summaryID = ctx.message_id;
-        });
-    }
+        summaryText,
+        this.mainMenuKeyboard
+      )
+      .then((ctx) => {
+        this.summaryID = ctx.message_id;
+      });
   };
 
   constructor(private file: File, private page: puppeteer.Page) {
@@ -279,20 +274,6 @@ export class Bot {
         this.updateMessage();
       });
 
-      this.bot.telegram
-        .sendMessage(
-          this.file.settings.bot.chatId,
-          this.absentText,
-          this.mainMenuKeyboard
-        )
-        .then((ctx) => {
-          this.bot.telegram.deleteMessage(
-            this.file.settings.bot.chatId,
-            this.messageInfoID
-          );
-          this.messageInfoID = ctx.message_id;
-        });
-
       let isAbsent = false;
 
       for (const meetingLink of meetingLinks) {
@@ -307,12 +288,8 @@ export class Bot {
             await this.updateMessage();
             isAbsent = true;
           }
-          this.todaysSummary.linkMeets.push(meetingLink);
           const classLink: string = await this.scrapper.absent(meetingLink);
-          this.bot.telegram.sendMessage(
-            this.file.settings.bot.chatId,
-            classLink
-          );
+          this.todaysSummary.linkMeets.push(classLink);
         }
       }
     } else {
@@ -321,7 +298,7 @@ export class Bot {
     }
     this.sendSummary();
     let deleteMessageTime = new Date();
-    deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 5);
+    deleteMessageTime.setMinutes(deleteMessageTime.getMinutes() + 1);
     new CronJob(
       deleteMessageTime,
       () => {
@@ -336,10 +313,11 @@ export class Bot {
   };
 
   private addSchedule = (unixTime: number) => {
-    console.log(new Date(unixTime));
     new CronJob(
       new Date(unixTime),
       () => {
+        console.log(new Date(unixTime));
+        console.log(new Date());
         this.absent();
       },
       undefined,
