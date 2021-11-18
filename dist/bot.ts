@@ -156,7 +156,7 @@ export class Bot {
       date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
     let summaryText: string =
       days[date.getDay()] +
-      'Summary\n' +
+      ' Summary\n' +
       'Login Count: ' +
       this.todaysSummary.loginCount +
       '\nLast Check: ' +
@@ -236,12 +236,12 @@ export class Bot {
       );
       return;
     }
-    if (this.messageInfoID !== undefined) {
-      this.bot.telegram.deleteMessage(
-        this.file.settings.bot.chatId,
-        this.messageInfoID
-      );
-    }
+    // if (this.messageInfoID !== undefined) {
+    //   this.bot.telegram.deleteMessage(
+    //     this.file.settings.bot.chatId,
+    //     this.messageInfoID
+    //   );
+    // }
     this.absentText =
       'Mencoba login ' + this.file.settings.profile.email + '\n';
     await this.bot.telegram

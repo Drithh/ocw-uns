@@ -12,7 +12,7 @@ const main = async () => {
   const [awakeTime, sleepTime] = settingsJob(file);
 
   const openBrowser = new CronJob(
-    '* * * * * *',
+    awakeTime,
     async () => {
       browser = await setupBrowser();
       const page = await browser.newPage();
@@ -55,7 +55,7 @@ const settingsJob = (file: File) => {
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     userDataDir: './cache',
     args: [
       '--no-sandbox',
@@ -71,21 +71,5 @@ const setupBrowser = async () => {
   console.log(`Started ${browserVersion}`);
   return browser;
 };
-
-const coba = async () => {
-  let date = new Date();
-  date.setMinutes(date.getMinutes() + 1);
-  const job = new CronJob(
-    date,
-    () => {
-      const d = new Date();
-      console.log('Specific date:', date, ', onTick at:', d);
-    },
-    undefined,
-    true
-  );
-};
-
-// coba();
 
 main();

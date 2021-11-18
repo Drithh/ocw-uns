@@ -111,10 +111,20 @@ class Bot {
             yield this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.messageInfoID, undefined, this.absentText);
         });
         this.sendSummary = () => __awaiter(this, void 0, void 0, function* () {
+            const days = [
+                'Sunday',
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+            ];
             this.todaysSummary.loginCount++;
             let date = new Date();
             let time = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
-            let summaryText = '========AUTO ABSEN========\n' +
+            let summaryText = days[date.getDay()] +
+                ' Summary\n' +
                 'Login Count: ' +
                 this.todaysSummary.loginCount +
                 '\nLast Check: ' +
@@ -138,9 +148,6 @@ class Bot {
             if (this.file.settings.profile.email === '') {
                 yield this.bot.telegram.sendMessage(this.file.settings.bot.chatId, 'Isi Profile Terlebih Dahulu');
                 return;
-            }
-            if (this.messageInfoID !== undefined) {
-                this.bot.telegram.deleteMessage(this.file.settings.bot.chatId, this.messageInfoID);
             }
             this.absentText =
                 'Mencoba login ' + this.file.settings.profile.email + '\n';
