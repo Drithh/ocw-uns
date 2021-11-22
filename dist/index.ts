@@ -4,9 +4,7 @@ import { Bot } from './bot';
 import { CronJob } from 'cron';
 
 // TODO
-// Fix if (response.request().redirectChain()[0].url().match('login'))
 // Fix Timeout Puppeteer
-// Fix Schedule
 
 const main = async () => {
   let file: File = new File();
@@ -58,7 +56,7 @@ const jobSettings = (file: File) => {
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     userDataDir: './cache',
     args: [
       '--no-sandbox',
