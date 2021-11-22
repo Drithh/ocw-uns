@@ -17,7 +17,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     let file = new file_1.File();
     file.read();
     let browser;
-    const [awakeTime, sleepTime] = settingsJob(file);
+    const [awakeTime, sleepTime] = jobSettings(file);
     const openBrowser = new cron_1.CronJob(awakeTime, () => __awaiter(void 0, void 0, void 0, function* () {
         browser = yield setupBrowser();
         const page = yield browser.newPage();
@@ -31,7 +31,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         openBrowser.start();
     }), null, true, 'Asia/Jakarta');
 });
-const settingsJob = (file) => {
+const jobSettings = (file) => {
     const schedule = file.settings.schedule;
     let awake;
     let sleep;
@@ -47,7 +47,7 @@ const settingsJob = (file) => {
 };
 const setupBrowser = () => __awaiter(void 0, void 0, void 0, function* () {
     const browser = yield puppeteer.launch({
-        headless: true,
+        headless: false,
         userDataDir: './cache',
         args: [
             '--no-sandbox',

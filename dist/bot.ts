@@ -124,6 +124,7 @@ export class Bot {
     }
   );
 
+  private jobCollision: boolean = false;
   private bot: Telegraf;
   private scrapper: Scrapper;
   private absentText: string;
@@ -215,7 +216,11 @@ export class Bot {
     new CronJob(
       '0 */15 7-17 * * *',
       () => {
-        this.absent();
+        if (!this.jobCollision) {
+          this.absent();
+        } else {
+          this.jobCollision = false;
+        }
       },
       null,
       true,
@@ -313,15 +318,23 @@ export class Bot {
   };
 
   private addSchedule = (unixTime: number) => {
-    new CronJob(
-      new Date(unixTime),
-      () => {
-        console.log(new Date(unixTime));
-        console.log(new Date());
-        this.absent();
-      },
-      undefined,
-      true
-    );
+    const courseStartTime = new Date(unixTime);
+    const currentTime = new Date();
+    if (
+      courseStartTime.getHours() === currentTime.getHours() &&
+      courseStartTime.getMinutes() - currentTime.getMinutes() < 15 &&
+      courseStartTime.getMinutes() % 15 !== 0
+    ) {
+      new CronJob(
+        courseStartTime,
+        () => {
+          console.log('Job started');
+          this.jobCollision = true;
+          this.absent();
+        },
+        undefined,
+        true
+      );
+    }
   };
 }

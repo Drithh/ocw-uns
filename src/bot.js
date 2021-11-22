@@ -107,6 +107,7 @@ class Bot {
             ctx.reply('Terima Kasih', this.mainMenuKeyboard);
             return ctx.scene.leave();
         });
+        this.jobCollision = false;
         this.todaysSummary = { loginCount: 0, linkMeets: new Array() };
         this.updateMessage = () => __awaiter(this, void 0, void 0, function* () {
             yield this.bot.telegram.editMessageText(this.file.settings.bot.chatId, this.messageInfoID, undefined, this.absentText);
@@ -204,11 +205,17 @@ class Bot {
             }, undefined, true);
         });
         this.addSchedule = (unixTime) => {
-            new cron_1.CronJob(new Date(unixTime), () => {
-                console.log(new Date(unixTime));
-                console.log(new Date());
-                this.absent();
-            }, undefined, true);
+            const courseStartTime = new Date(unixTime);
+            const currentTime = new Date();
+            if (courseStartTime.getHours() === currentTime.getHours() &&
+                courseStartTime.getMinutes() - currentTime.getMinutes() < 15 &&
+                courseStartTime.getMinutes() % 15 !== 0) {
+                new cron_1.CronJob(courseStartTime, () => {
+                    console.log('Job started');
+                    this.jobCollision = true;
+                    this.absent();
+                }, undefined, true);
+            }
         };
         this.scrapper = new scrapper_1.Scrapper(page, file.settings);
         this.bot = new telegraf_1.Telegraf(file.settings.bot.botToken);
@@ -238,7 +245,12 @@ class Bot {
             }
         }));
         new cron_1.CronJob('0 */15 7-17 * * *', () => {
-            this.absent();
+            if (!this.jobCollision) {
+                this.absent();
+            }
+            else {
+                this.jobCollision = false;
+            }
         }, null, true, 'Asia/Jakarta');
     }
 }

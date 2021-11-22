@@ -7,24 +7,31 @@ export class Scrapper {
   constructor(private page: puppeteer.Page, private settings: any) {}
 
   public login = async () => {
-    const response = await this.page.goto('https://ocw.uns.ac.id/saml/login', {
-      waitUntil: 'networkidle2',
-    });
-
-    // Ketika Belum Login
-    if (response.request().redirectChain()[0].url().match('login')) {
-      await this.page.type(
-        'input.form-control[type="text"]',
-        this.settings.profile.email
+    try {
+      const response = await this.page.goto(
+        'https://ocw.uns.ac.id/saml/login',
+        {
+          waitUntil: 'networkidle2',
+        }
       );
-      await this.page.type(
-        'input.form-control[type="password"]',
-        this.settings.profile.password
-      );
-      await this.page.click('.btn-flat');
-      return 'Login Berhasil';
-    } else {
-      return 'Login Menggunakan Sesi Yang Sebelumnya';
+      const chain = response.request().redirectChain();
+      // Ketika Belum Login
+      if (chain[0].url().match('login')) {
+        await this.page.type(
+          'input.form-control[type="text"]',
+          this.settings.profile.email
+        );
+        await this.page.type(
+          'input.form-control[type="password"]',
+          this.settings.profile.password
+        );
+        await this.page.click('.btn-flat');
+        return 'Login Berhasil';
+      } else {
+        return 'Login Menggunakan Sesi Yang Sebelumnya';
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 

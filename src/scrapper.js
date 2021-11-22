@@ -16,17 +16,23 @@ class Scrapper {
         this.settings = settings;
         this.alphaCourseLinks = new Array();
         this.login = () => __awaiter(this, void 0, void 0, function* () {
-            const response = yield this.page.goto('https://ocw.uns.ac.id/saml/login', {
-                waitUntil: 'networkidle2',
-            });
-            if (response.request().redirectChain()[0].url().match('login')) {
-                yield this.page.type('input.form-control[type="text"]', this.settings.profile.email);
-                yield this.page.type('input.form-control[type="password"]', this.settings.profile.password);
-                yield this.page.click('.btn-flat');
-                return 'Login Berhasil';
+            try {
+                const response = yield this.page.goto('https://ocw.uns.ac.id/saml/login', {
+                    waitUntil: 'networkidle2',
+                });
+                const chain = response.request().redirectChain();
+                if (chain[0].url().match('login')) {
+                    yield this.page.type('input.form-control[type="text"]', this.settings.profile.email);
+                    yield this.page.type('input.form-control[type="password"]', this.settings.profile.password);
+                    yield this.page.click('.btn-flat');
+                    return 'Login Berhasil';
+                }
+                else {
+                    return 'Login Menggunakan Sesi Yang Sebelumnya';
+                }
             }
-            else {
-                return 'Login Menggunakan Sesi Yang Sebelumnya';
+            catch (error) {
+                console.log(error);
             }
         });
         this.countAlpha = () => __awaiter(this, void 0, void 0, function* () {

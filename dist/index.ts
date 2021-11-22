@@ -5,12 +5,14 @@ import { CronJob } from 'cron';
 
 // TODO
 // Fix if (response.request().redirectChain()[0].url().match('login'))
+// Fix Timeout Puppeteer
+// Fix Schedule
 
 const main = async () => {
   let file: File = new File();
   file.read();
   let browser: puppeteer.Browser;
-  const [awakeTime, sleepTime] = settingsJob(file);
+  const [awakeTime, sleepTime] = jobSettings(file);
 
   const openBrowser = new CronJob(
     awakeTime,
@@ -39,7 +41,7 @@ const main = async () => {
   );
 };
 
-const settingsJob = (file: File) => {
+const jobSettings = (file: File) => {
   const schedule = file.settings.schedule;
   let awake: string;
   let sleep: string;
@@ -56,7 +58,7 @@ const settingsJob = (file: File) => {
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     userDataDir: './cache',
     args: [
       '--no-sandbox',
