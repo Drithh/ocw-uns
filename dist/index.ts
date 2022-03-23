@@ -1,68 +1,35 @@
 import * as puppeteer from 'puppeteer';
 import { File } from './file';
-import { Bot } from './bot';
-import { CronJob } from 'cron';
+import { Scrapper } from './scrapper';
 
 // TODO
 // Fix Timeout Puppeteer
+// save link kelas
 
 const main = async () => {
   let file: File = new File();
   file.read();
-  let browser: puppeteer.Browser;
-  const [awakeTime, sleepTime] = jobSettings(file);
-
-  const openBrowser = new CronJob(
-    awakeTime,
-    async () => {
-      browser = await setupBrowser();
-      const page = await browser.newPage();
-      const bot: Bot = new Bot(file, page);
-      openBrowser.stop();
-      closeBrowser.start();
-    },
-    null,
-    true,
-    'Asia/Jakarta'
-  );
-
-  const closeBrowser = new CronJob(
-    sleepTime,
-    async () => {
-      await browser.close();
-      closeBrowser.stop();
-      openBrowser.start();
-    },
-    null,
-    true,
-    'Asia/Jakarta'
-  );
-};
-
-const jobSettings = (file: File) => {
-  const schedule = file.settings.schedule;
-  let awake: string;
-  let sleep: string;
-  if (parseInt(schedule.startHour) < parseInt(schedule.endHour)) {
-    awake = `* * ${schedule.startHour}-${schedule.endHour} * * *`;
-    sleep = `* 30 ${schedule.endHour}-23,0-${schedule.startHour - 1} * * *`;
-  } else {
-    sleep = `* * ${schedule.startHour}-23,0-${schedule.endHour} * * *`;
-    awake = `* 30 ${schedule.endHour}-${schedule.startHour - 1} * * *`;
+  for (const profile of file.settings.profiles) {
+    const browser = await setupBrowser();
+    const page = (await browser.pages()).at(0);
+    const scrapper = new Scrapper(page, profile);
+    await scrapper.login();
+    await scrapper.kuliahBerlangsung();
+    await page.close();
   }
-
-  return [awake, sleep];
 };
 
 const setupBrowser = async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    executablePath: '/usr/bin/chromium',
+    headless: false,
     userDataDir: './cache',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
+      '--incognito',
     ],
   });
   await browser

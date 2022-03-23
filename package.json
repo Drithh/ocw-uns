@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && node src/index",
+    "build": "npx tsc && node src/index",
     "start": "node src/index"
   },
   "keywords": [],
@@ -17,6 +17,7 @@
     "telegraf": "^4.4.2"
   },
   "devDependencies": {
-    "@types/cron": "^1.7.3"
+    "@types/cron": "^1.7.3",
+    "typescript": "^4.6.2"
   }
 }

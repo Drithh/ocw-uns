@@ -11,133 +11,91 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scrapper = void 0;
 class Scrapper {
-    constructor(page, settings) {
+    constructor(page, profile) {
         this.page = page;
-        this.settings = settings;
-        this.alphaCourseLinks = new Array();
+        this.profile = profile;
         this.login = () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const response = yield this.page.goto('https://ocw.uns.ac.id/saml/login', {
                     waitUntil: 'networkidle2',
                 });
                 const chain = response.request().redirectChain();
-                if (chain[0].url().match('login')) {
-                    yield this.page.type('input.form-control[type="text"]', this.settings.profile.email);
-                    yield this.page.type('input.form-control[type="password"]', this.settings.profile.password);
-                    yield this.page.click('.btn-flat');
-                    return 'Login Berhasil';
-                }
-                else {
-                    return 'Login Menggunakan Sesi Yang Sebelumnya';
+                if (chain != null) {
+                    if (chain[0].url().match('login')) {
+                        yield this.page.type('input.form-control[type="text"]', this.profile.email);
+                        yield this.page.type('input.form-control[type="password"]', this.profile.password);
+                        yield this.page.click('.btn-flat');
+                        console.log('Login Berhasil');
+                    }
+                    else {
+                        console.log('Login Menggunakan Sesi Yang Sebelumnya');
+                    }
                 }
             }
             catch (error) {
                 console.log(error);
             }
+            yield this.page.waitForSelector('nav.navbar.navbar-default');
         });
-        this.countAlpha = () => __awaiter(this, void 0, void 0, function* () {
-            yield this.page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/statistik-detail', {
-                waitUntil: 'networkidle2',
-            });
-            const courses = yield this.page.evaluate(() => {
-                const rows = document.querySelectorAll('table tr');
-                return Array.from(rows, (row) => {
-                    const columns = row.querySelectorAll('td');
-                    return Array.from(columns, (column) => column.innerText);
-                });
-            });
-            courses.shift();
-            courses.pop();
-            const alphaCourses = courses.filter((course) => Number(course[4]) > 0);
-            const myCourses = yield this.page.evaluate(() => {
-                const listCourses = Array.from(document.querySelectorAll('.daftar-makul a'));
-                const NamaCourses = Array.from(new Set(Array.from(listCourses, (listCourse) => listCourse.innerText)));
-                const LinkCourses = Array.from(new Set(Array.from(listCourses, (listCourse) => 'https://ocw.uns.ac.id' + listCourse.getAttribute('href'))));
-                return NamaCourses.map((item, i) => {
-                    return [item, [LinkCourses[i]]];
-                });
-            });
-            this.alphaCourseLinks = new Array();
-            myCourses.forEach((myCourse) => {
-                alphaCourses.forEach((alphaCourse) => {
-                    if (String(myCourse[0]).match(alphaCourse[1])) {
-                        this.alphaCourseLinks.push(myCourse);
-                    }
-                });
-            });
-            return this.alphaCourseLinks.length;
-        });
-        this.listAlpha = () => __awaiter(this, void 0, void 0, function* () {
-            const messaageStrings = new Array();
-            for (const alphaCourseLink of this.alphaCourseLinks) {
-                yield this.page.goto(String(alphaCourseLink[1]), {
+        this.kuliahBerlangsung = () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/kuliah-berlangsung', {
                     waitUntil: 'networkidle2',
                 });
-                yield this.page.waitForSelector('#clock');
-                const currentTime = new Date().getTime();
-                const courseSchedules = yield this.page.evaluate(() => {
-                    let listAbsents = Array.from(document.querySelectorAll('.col-md-6 .panel-body'));
-                    listAbsents = listAbsents.filter((listAbsent) => listAbsent.querySelector('p:nth-of-type(4)').innerHTML.match('ALPHA'));
-                    const meeting = Array.from(listAbsents, (listAbsent) => listAbsent.querySelector('p').textContent);
-                    const dates = Array.from(listAbsents, (listAbsent) => listAbsent.querySelectorAll('small, a.btn-default'));
-                    let schedules = Array.from(dates, (date) => {
-                        const scheduleDate = date[0].innerHTML;
-                        const [startTime, endTime] = date[1].innerHTML
-                            .split(' ')
-                            .filter((hour) => hour != '-');
-                        return [
-                            Date.parse(scheduleDate + ' ' + startTime + ' GMT+7'),
-                            Date.parse(scheduleDate + ' ' + endTime + ' GMT+7'),
-                            'https://ocw.uns.ac.id/' + date[2].getAttribute('href'),
-                        ];
-                    });
-                    return meeting.map((item, i) => {
-                        return [item, schedules[i]];
-                    });
+                yield this.page.waitForSelector('.panel-body');
+                const alphaLinks = yield this.page.evaluate(() => {
+                    return Array.from(Array.from(document.querySelectorAll('a.btn.btn-primary')).filter((course) => course.textContent.includes('Anda Belum Presensi')), (alphaLink) => 'https://ocw.uns.ac.id' + alphaLink.getAttribute('href'));
                 });
-                const Messages = ['Kuliah Sedang Berjalan ', 'Kuliah Belum Dimulai '];
-                courseSchedules.forEach((courseSchedule) => {
-                    let [courseName, [courseStartTime, courseEndTime, meetingLink]] = courseSchedule;
-                    const scheduleCond = currentTime > courseStartTime && currentTime < courseEndTime
-                        ? 0
-                        : currentTime < courseStartTime
-                            ? 1
-                            : 2;
-                    if (scheduleCond !== 2) {
-                        messaageStrings.push([
-                            Messages[scheduleCond] +
-                                alphaCourseLink[0] +
-                                ' ' +
-                                courseName +
-                                ' ' +
-                                new Date(courseStartTime).toLocaleDateString('en-US'),
-                            scheduleCond == 0
-                                ? meetingLink
-                                : scheduleCond == 1
-                                    ? courseStartTime
-                                    : '-',
-                        ]);
+                console.log(alphaLinks);
+                let linkAbsen = new Array();
+                if (alphaLinks.length > 0) {
+                    for (const alphaLink of alphaLinks) {
+                        linkAbsen.push(yield this.findLinkAbsen(alphaLink));
                     }
+                }
+                linkAbsen.forEach((link) => {
+                    this.absen(link);
                 });
             }
-            return messaageStrings;
+            catch (error) {
+                console.log(error);
+            }
         });
-        this.absent = (linkAbsent) => __awaiter(this, void 0, void 0, function* () {
+        this.findLinkAbsen = (linkMataKuliah) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.page.goto(linkMataKuliah, {
+                    waitUntil: 'networkidle2',
+                });
+                yield this.page.waitForSelector('a.btn.btn-primary');
+                const linkAbsen = yield this.page.evaluate(() => {
+                    return ('https://ocw.uns.ac.id' +
+                        document.querySelector('.panel-body a.btn').getAttribute('href'));
+                });
+                return linkAbsen;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
+        this.absen = (linkAbsent) => __awaiter(this, void 0, void 0, function* () {
             yield this.page.goto(linkAbsent, {
                 waitUntil: 'networkidle2',
             });
             yield this.page.setGeolocation({
-                latitude: parseFloat(this.settings.geolocation.latitude),
-                longitude: parseFloat(this.settings.geolocation.longitude),
+                latitude: parseFloat(this.profile.geolocation.latitude),
+                longitude: parseFloat(this.profile.geolocation.longitude),
             });
             yield this.page.click('li button.btn-default');
             yield this.page.click('button#submit-lakukan-presensi');
             yield this.page.waitForNavigation({ waitUntil: 'networkidle2' });
+            this.page.on('dialog', (dialog) => __awaiter(this, void 0, void 0, function* () {
+                yield dialog.dismiss();
+            }));
             const linkURL = this.page.url();
             yield this.page.goto('https://ocw.uns.ac.id/', {
                 waitUntil: 'networkidle2',
             });
-            return linkURL;
+            console.log(linkURL);
         });
     }
 }
