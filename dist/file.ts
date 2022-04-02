@@ -20,7 +20,6 @@ export class File {
         flag: 'r',
       })
     );
-    console.log(this.profiles);
   }
 
   public write = () => {

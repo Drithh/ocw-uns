@@ -80,7 +80,7 @@ client.on('message', async (message: Message) => {
         (await message.getChat()).sendMessage(`Berhasil Menghapus Akun`);
       }
     }
-    console.log(message);
+    // console.log(message);
   }
 });
 
@@ -131,7 +131,7 @@ const main = async (chat?: Chat) => {
 let job: CronJob;
 
 const setJob = async () => {
-  job = new CronJob('* */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
+  new CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
 };
 const setup = async () => {
   await client.initialize();

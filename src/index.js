@@ -82,7 +82,6 @@ client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* ()
                 (yield message.getChat()).sendMessage(`Berhasil Menghapus Akun`);
             }
         }
-        console.log(message);
     }
 }));
 const addAccount = (user, chat) => __awaiter(void 0, void 0, void 0, function* () {
@@ -127,7 +126,7 @@ const main = (chat) => __awaiter(void 0, void 0, void 0, function* () {
 });
 let job;
 const setJob = () => __awaiter(void 0, void 0, void 0, function* () {
-    job = new cron_1.CronJob('0 */5 * * * * ', main, null, true, 'Asia/Jakarta');
+    new cron_1.CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
 });
 const setup = () => __awaiter(void 0, void 0, void 0, function* () {
     yield client.initialize();

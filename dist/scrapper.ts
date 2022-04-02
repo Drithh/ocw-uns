@@ -38,12 +38,12 @@ export class Scrapper {
         } else {
           this.chat?.sendMessage('Login Menggunakan Sesi Yang Sebelumnya');
         }
+        await this.page.waitForSelector('nav.navbar.navbar-default');
       }
     } catch (error) {
       this.chat?.sendMessage(`Gagal Login ${this.profile.email}`);
       console.log(error);
     }
-    await this.page.waitForSelector('nav.navbar.navbar-default');
   };
 
   private kuliahBerlangsung = async () => {

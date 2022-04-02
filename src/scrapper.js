@@ -42,13 +42,13 @@ class Scrapper {
                     else {
                         (_c = this.chat) === null || _c === void 0 ? void 0 : _c.sendMessage('Login Menggunakan Sesi Yang Sebelumnya');
                     }
+                    yield this.page.waitForSelector('nav.navbar.navbar-default');
                 }
             }
             catch (error) {
                 (_d = this.chat) === null || _d === void 0 ? void 0 : _d.sendMessage(`Gagal Login ${this.profile.email}`);
                 console.log(error);
             }
-            yield this.page.waitForSelector('nav.navbar.navbar-default');
         });
         this.kuliahBerlangsung = () => __awaiter(this, void 0, void 0, function* () {
             var _e, _f, _g;
