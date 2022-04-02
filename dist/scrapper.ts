@@ -1,15 +1,24 @@
-import moment = require('moment');
-import * as puppeteer from 'puppeteer';
-
+import { Page } from 'puppeteer';
+import { Chat } from 'whatsapp-web.js';
 export class Scrapper {
-  constructor(private page: puppeteer.Page, private profile: any) {}
+  constructor(private page: Page, private profile: any, private chat?: Chat) {}
 
-  public login = async () => {
+  public main = async () => {
     try {
+      await this.login();
+      await this.kuliahBerlangsung();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  private login = async () => {
+    try {
+      this.chat?.sendMessage(`Mencoba Login ${this.profile.email}`);
       const response = await this.page.goto(
         'https://ocw.uns.ac.id/saml/login',
         {
-          waitUntil: 'networkidle2',
+          waitUntil: 'networkidle0',
         }
       );
       const chain = response.request().redirectChain();
@@ -25,56 +34,96 @@ export class Scrapper {
             this.profile.password
           );
           await this.page.click('.btn-flat');
-          console.log('Login Berhasil');
+          this.chat?.sendMessage('Login Berhasil');
         } else {
-          console.log('Login Menggunakan Sesi Yang Sebelumnya');
+          this.chat?.sendMessage('Login Menggunakan Sesi Yang Sebelumnya');
         }
       }
     } catch (error) {
+      this.chat?.sendMessage(`Gagal Login ${this.profile.email}`);
       console.log(error);
     }
     await this.page.waitForSelector('nav.navbar.navbar-default');
   };
 
-  public kuliahBerlangsung = async () => {
+  private kuliahBerlangsung = async () => {
     try {
       await this.page.goto(
         'https://ocw.uns.ac.id/presensi-online-mahasiswa/kuliah-berlangsung',
         {
-          waitUntil: 'networkidle2',
+          waitUntil: 'networkidle0',
         }
       );
 
-      await this.page.waitForSelector('.panel-body');
+      await this.page.waitForSelector('.content');
 
-      const alphaLinks = await this.page.evaluate(() => {
-        return Array.from(
-          Array.from(document.querySelectorAll('a.btn.btn-primary')).filter(
-            (course) => course.textContent.includes('Anda Belum Presensi')
-          ),
-          (alphaLink) =>
-            'https://ocw.uns.ac.id' + alphaLink.getAttribute('href')
+      const alphaCourses = await this.page.evaluate(() => {
+        const absenPanels = Array.from(
+          document.querySelectorAll('.panel-body')
+        ).filter((panel) => panel.innerHTML.includes('Anda Belum Presensi'));
+        return Array.from(absenPanels, (absenPanel) => [
+          absenPanel.querySelector('b').textContent.split(' - ')[1],
+          'https://ocw.uns.ac.id' +
+            absenPanel.querySelector('a').getAttribute('href'),
+        ]);
+      });
+      if (alphaCourses.length > 0) {
+        this.chat?.sendMessage(
+          `Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`
         );
-      });
-      console.log(alphaLinks);
-      let linkAbsen: string[] = new Array();
-      if (alphaLinks.length > 0) {
-        for (const alphaLink of alphaLinks) {
-          linkAbsen.push(await this.findLinkAbsen(alphaLink));
+        for (const alphaCourse of alphaCourses) {
+          await this.absen([alphaCourse[0], alphaCourse[1]]);
         }
+      } else {
+        this.chat?.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
       }
-      linkAbsen.forEach((link) => {
-        this.absen(link);
-      });
     } catch (error) {
+      this.chat?.sendMessage(
+        `Gagal Query Kuliah Berlangsung ${this.profile.email}`
+      );
       console.log(error);
     }
   };
 
-  public findLinkAbsen = async (linkMataKuliah: string) => {
+  private absen = async ([namaMataKuliah, linkKelas]: [string, string]) => {
     try {
-      await this.page.goto(linkMataKuliah, {
-        waitUntil: 'networkidle2',
+      this.chat?.sendMessage(`Mencari Link Absen ${namaMataKuliah}`);
+      const linkPresensi = await this.findLinkAbsen(linkKelas);
+
+      this.chat?.sendMessage(`Mencoba Absen ${namaMataKuliah}`);
+      await this.page.goto(linkPresensi, {
+        waitUntil: 'networkidle0',
+      });
+
+      await this.page.setGeolocation({
+        latitude: parseFloat(this.profile.geolocation.latitude),
+        longitude: parseFloat(this.profile.geolocation.longitude),
+      });
+
+      await this.page.click('li button.btn-default');
+      await this.page.click('button#submit-lakukan-presensi');
+
+      await this.page.waitForNavigation();
+      const linkURL: string = this.page.url();
+      this.page.on('dialog', async (dialog) => {
+        await dialog.dismiss();
+      });
+      await this.page.goto('https://ocw.uns.ac.id/', {
+        waitUntil: 'networkidle0',
+      });
+
+      this.chat?.sendMessage(linkURL);
+      this.chat?.sendMessage(`Absen ${namaMataKuliah} Berhasil`);
+    } catch (error) {
+      this.chat?.sendMessage(`Gagal Absen ${this.profile.email}`);
+      console.log(error);
+    }
+  };
+
+  private findLinkAbsen = async (linkKelas: string) => {
+    try {
+      await this.page.goto(linkKelas, {
+        waitUntil: 'networkidle0',
       });
 
       await this.page.waitForSelector('a.btn.btn-primary');
@@ -90,28 +139,5 @@ export class Scrapper {
     } catch (error) {
       console.log(error);
     }
-  };
-
-  public absen = async (linkAbsent: string) => {
-    await this.page.goto(linkAbsent, {
-      waitUntil: 'networkidle2',
-    });
-
-    await this.page.setGeolocation({
-      latitude: parseFloat(this.profile.geolocation.latitude),
-      longitude: parseFloat(this.profile.geolocation.longitude),
-    });
-
-    await this.page.click('li button.btn-default');
-    await this.page.click('button#submit-lakukan-presensi');
-    await this.page.waitForNavigation({ waitUntil: 'networkidle2' });
-    this.page.on('dialog', async (dialog) => {
-      await dialog.dismiss();
-    });
-    const linkURL: string = this.page.url();
-    await this.page.goto('https://ocw.uns.ac.id/', {
-      waitUntil: 'networkidle2',
-    });
-    console.log(linkURL);
   };
 }

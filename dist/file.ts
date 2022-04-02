@@ -1,38 +1,30 @@
 import * as fs from 'fs';
 
 export class File {
-  public settings: any;
+  public profiles = new Array();
 
-  public edit(object: any) {
-    const objectKey = Object.keys(object)[0];
-    Object.keys(object[objectKey]).forEach((key) => {
-      if (object[objectKey][key] !== '-') {
-        this.settings[objectKey][key] = object[objectKey][key];
+  public check(newProfile: any) {
+    let isProfile: boolean = false;
+    this.profiles.forEach((profile) => {
+      if (profile.email == newProfile.email) {
+        isProfile = true;
       }
     });
-    this.write();
+    return isProfile ? true : false;
   }
 
   public read() {
-    this.settings = JSON.parse(
+    this.profiles = JSON.parse(
       fs.readFileSync('./profile.json', {
         encoding: 'utf8',
         flag: 'r',
       })
     );
-    if (this.settings.bot.botToken === '') {
-      this.readWriteBotToken();
-    }
-  }
-
-  private readWriteBotToken() {
-    var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
-    this.settings.bot.botToken = botToken;
-    this.write();
+    console.log(this.profiles);
   }
 
   public write = () => {
-    const jsonString = JSON.stringify(this.settings);
+    const jsonString = JSON.stringify(this.profiles);
     fs.writeFileSync('./profile.json', jsonString);
   };
 }

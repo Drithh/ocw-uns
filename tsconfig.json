@@ -1,12 +1,12 @@
 {
-    "compilerOptions": {
-        "lib": ["ES2016", "DOM"],
-        "target": "ES6",
-        "module": "commonjs",
-        "noImplicitAny": true,
-        "removeComments": true,
-        "preserveConstEnums": true,
-        "sourceMap": true,
-        "outDir": "src",
-    },
+  "compilerOptions": {
+    "lib": ["ES2016", "DOM"],
+    "target": "ES6",
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "outDir": "src"
+  }
 }

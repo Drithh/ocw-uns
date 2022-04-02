@@ -4,33 +4,27 @@ exports.File = void 0;
 const fs = require("fs");
 class File {
     constructor() {
+        this.profiles = new Array();
         this.write = () => {
-            const jsonString = JSON.stringify(this.settings);
+            const jsonString = JSON.stringify(this.profiles);
             fs.writeFileSync('./profile.json', jsonString);
         };
     }
-    edit(object) {
-        const objectKey = Object.keys(object)[0];
-        Object.keys(object[objectKey]).forEach((key) => {
-            if (object[objectKey][key] !== '-') {
-                this.settings[objectKey][key] = object[objectKey][key];
+    check(newProfile) {
+        let isProfile = false;
+        this.profiles.forEach((profile) => {
+            if (profile.email == newProfile.email) {
+                isProfile = true;
             }
         });
-        this.write();
+        return isProfile ? true : false;
     }
     read() {
-        this.settings = JSON.parse(fs.readFileSync('./profile.json', {
+        this.profiles = JSON.parse(fs.readFileSync('./profile.json', {
             encoding: 'utf8',
             flag: 'r',
         }));
-        if (this.settings.bot.botToken === '') {
-            this.readWriteBotToken();
-        }
-    }
-    readWriteBotToken() {
-        var botToken = fs.readFileSync('./BotTokenEnv.txt', 'utf-8');
-        this.settings.bot.botToken = botToken;
-        this.write();
+        console.log(this.profiles);
     }
 }
 exports.File = File;
