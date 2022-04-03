@@ -169,7 +169,7 @@ io.on('connection', (socket) => {
         socket.emit('message', log_1.Log.addLog(`Client is ready!`));
     });
 });
-server.listen(process.env.PORT || 5000, () => {
+server.listen(process.env.PORT || 3000, () => {
     console.log('Server started');
 });
 //# sourceMappingURL=index.js.map
