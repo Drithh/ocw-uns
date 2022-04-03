@@ -22,12 +22,39 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.File = void 0;
 const fs = __importStar(require("fs"));
 class File {
     constructor() {
         this.profiles = new Array();
+        this.read = () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (fs.existsSync('./profile.json')) {
+                    this.profiles = JSON.parse(fs.readFileSync('./profile.json', {
+                        encoding: 'utf8',
+                        flag: 'r',
+                    }));
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            catch (err) {
+                console.error(err);
+                return false;
+            }
+        });
         this.write = () => {
             const jsonString = JSON.stringify(this.profiles);
             fs.writeFileSync('./profile.json', jsonString);
@@ -41,12 +68,6 @@ class File {
             }
         });
         return isProfile ? true : false;
-    }
-    read() {
-        this.profiles = JSON.parse(fs.readFileSync('./profile.json', {
-            encoding: 'utf8',
-            flag: 'r',
-        }));
     }
 }
 exports.File = File;

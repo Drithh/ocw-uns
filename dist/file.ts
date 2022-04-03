@@ -13,14 +13,24 @@ export class File {
     return isProfile ? true : false;
   }
 
-  public read() {
-    this.profiles = JSON.parse(
-      fs.readFileSync('./profile.json', {
-        encoding: 'utf8',
-        flag: 'r',
-      })
-    );
-  }
+  public read = async () => {
+    try {
+      if (fs.existsSync('./profile.json')) {
+        this.profiles = JSON.parse(
+          fs.readFileSync('./profile.json', {
+            encoding: 'utf8',
+            flag: 'r',
+          })
+        );
+        return true;
+      } else {
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
 
   public write = () => {
     const jsonString = JSON.stringify(this.profiles);

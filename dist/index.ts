@@ -40,35 +40,47 @@ client.on('message', async (message: Message) => {
         `User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\n longitude: 110.6019`
       );
     } else if (message.body.includes('User')) {
-      const profile = message.body.split('\n');
-      const user = {
-        email: profile[1].split(':')[1].replace(/\s/g, ''),
-        password: profile[2].split(':')[1].replace(/\s/g, ''),
-        geolocation: {
-          latitude: profile[3].split(':')[1].replace(/\s/g, ''),
-          longitude: profile[4].split(':')[1].replace(/\s/g, ''),
-        },
-      };
-      addAccount(user, await message.getChat());
+      try {
+        const profile = message.body.split('\n');
+        const user = {
+          email: profile[1].split(':')[1].replace(/\s/g, ''),
+          password: profile[2].split(':')[1].replace(/\s/g, ''),
+          geolocation: {
+            latitude: profile[3].split(':')[1].replace(/\s/g, ''),
+            longitude: profile[4].split(':')[1].replace(/\s/g, ''),
+          },
+        };
+        addAccount(user, await message.getChat());
+      } catch (error) {
+        message.reply('Gagal Menambahkan User\nFormat Salah?');
+        console.log(error);
+      }
     } else if (message.body === 'remove user') {
-      const file: File = new File();
-      file.read();
-      let row = new Array();
-      file.profiles.forEach((profile) => {
-        row.push({
-          id: `remove ${profile.email}`,
-          title: `${profile.email}`,
+      try {
+        const file: File = new File();
+        if (!(await file.read())) {
+          message.reply('File tidak ditemukan');
+          return;
+        }
+        let row = new Array();
+        file.profiles.forEach((profile) => {
+          row.push({
+            id: `remove ${profile.email}`,
+            title: `${profile.email}`,
+          });
         });
-      });
-      let sections = [
-        {
-          title: `List Akun`,
-          rows: row,
-        },
-      ];
-      let list = new List(``, `Lihat Akun`, sections, `List Akun`, 'footer');
+        let sections = [
+          {
+            title: `List Akun`,
+            rows: row,
+          },
+        ];
+        let list = new List(``, `Lihat Akun`, sections, `List Akun`, 'footer');
 
-      (await message.getChat()).sendMessage(list);
+        (await message.getChat()).sendMessage(list);
+      } catch (error) {
+        console.log(error);
+      }
     } else if (message.type === 'list_response') {
       if (message.selectedRowId.includes('remove')) {
         const file: File = new File();

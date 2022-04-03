@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc && node src/index",
+    "build": "npx tsc",
+    "dev": "npx tsc && node src/index",
     "start": "node src/index"
   },
   "keywords": [],

@@ -40,35 +40,49 @@ client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* ()
             message.reply(`User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\n longitude: 110.6019`);
         }
         else if (message.body.includes('User')) {
-            const profile = message.body.split('\n');
-            const user = {
-                email: profile[1].split(':')[1].replace(/\s/g, ''),
-                password: profile[2].split(':')[1].replace(/\s/g, ''),
-                geolocation: {
-                    latitude: profile[3].split(':')[1].replace(/\s/g, ''),
-                    longitude: profile[4].split(':')[1].replace(/\s/g, ''),
-                },
-            };
-            addAccount(user, yield message.getChat());
+            try {
+                const profile = message.body.split('\n');
+                const user = {
+                    email: profile[1].split(':')[1].replace(/\s/g, ''),
+                    password: profile[2].split(':')[1].replace(/\s/g, ''),
+                    geolocation: {
+                        latitude: profile[3].split(':')[1].replace(/\s/g, ''),
+                        longitude: profile[4].split(':')[1].replace(/\s/g, ''),
+                    },
+                };
+                addAccount(user, yield message.getChat());
+            }
+            catch (error) {
+                message.reply('Gagal Menambahkan User\nFormat Salah?');
+                console.log(error);
+            }
         }
         else if (message.body === 'remove user') {
-            const file = new file_1.File();
-            file.read();
-            let row = new Array();
-            file.profiles.forEach((profile) => {
-                row.push({
-                    id: `remove ${profile.email}`,
-                    title: `${profile.email}`,
+            try {
+                const file = new file_1.File();
+                if (!(yield file.read())) {
+                    message.reply('File tidak ditemukan');
+                    return;
+                }
+                let row = new Array();
+                file.profiles.forEach((profile) => {
+                    row.push({
+                        id: `remove ${profile.email}`,
+                        title: `${profile.email}`,
+                    });
                 });
-            });
-            let sections = [
-                {
-                    title: `List Akun`,
-                    rows: row,
-                },
-            ];
-            let list = new whatsapp_web_js_1.List(``, `Lihat Akun`, sections, `List Akun`, 'footer');
-            (yield message.getChat()).sendMessage(list);
+                let sections = [
+                    {
+                        title: `List Akun`,
+                        rows: row,
+                    },
+                ];
+                let list = new whatsapp_web_js_1.List(``, `Lihat Akun`, sections, `List Akun`, 'footer');
+                (yield message.getChat()).sendMessage(list);
+            }
+            catch (error) {
+                console.log(error);
+            }
         }
         else if (message.type === 'list_response') {
             if (message.selectedRowId.includes('remove')) {
