@@ -13,9 +13,11 @@ let master: Chat;
 
 const client = new Client({
   puppeteer: {
-    headless: false,
+    headless: true,
     userDataDir: './userData',
+    args: ['--no-sandbox'],
   },
+
   // authStrategy: new LocalAuth(),
 });
 

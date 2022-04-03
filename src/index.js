@@ -17,8 +17,9 @@ const whatsapp_web_js_1 = require("whatsapp-web.js");
 let master;
 const client = new whatsapp_web_js_1.Client({
     puppeteer: {
-        headless: false,
+        headless: true,
         userDataDir: './userData',
+        args: ['--no-sandbox'],
     },
 });
 client.on('qr', (qr) => {
