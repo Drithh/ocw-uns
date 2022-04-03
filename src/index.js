@@ -18,7 +18,7 @@ const cron_1 = require("cron");
 const express_1 = __importDefault(require("express"));
 const http = require('http');
 const qrcode = require('qrcode');
-const time_1 = require("./time");
+const log_1 = require("./log");
 const whatsapp_web_js_1 = require("whatsapp-web.js");
 const app = (0, express_1.default)();
 const server = http.createServer(app);
@@ -129,8 +129,8 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     let file = new file_1.File();
     file.read();
     for (const profile of file.profiles) {
-        io.sockets.emit(`message`, `${(0, time_1.getTime)()} Started ${profile.email}`);
-        io.sockets.emit(`message`, `${(0, time_1.getTime)()} Start Scrapping`);
+        io.sockets.emit(`message`, log_1.Log.addLog(`Started ${profile.email}`));
+        io.sockets.emit(`message`, log_1.Log.addLog(`Start Scrapping`));
         const page = yield client.pupBrowser.newPage();
         const scrapper = new scrapper_1.Scrapper(page, profile, io);
         yield scrapper.main();
@@ -151,17 +151,22 @@ const setup = () => __awaiter(void 0, void 0, void 0, function* () {
     new cron_1.CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
 });
 setup();
+io.on('connect', () => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('connected');
+    yield log_1.Log.read();
+    io.sockets.emit('lastlog', log_1.Log.logs);
+}));
 io.on('connection', (socket) => {
-    socket.emit('message', `${(0, time_1.getTime)()} Connecting...`);
+    socket.emit('message', log_1.Log.addLog(`Connecting...`));
     client.on('qr', (qr) => {
         qrcode.toDataURL(qr, (err, url) => {
-            socket.emit('message', `${(0, time_1.getTime)()} Please Scan QRCode`);
+            socket.emit('message', log_1.Log.addLog(`Please Scan QRCode`));
             socket.emit('qrcode', url);
         });
     });
     client.on('ready', () => {
         console.log('Client is ready');
-        socket.emit('message', `${(0, time_1.getTime)()} Client is ready!\n${(0, time_1.getTime)()} Client is ready!\n${(0, time_1.getTime)()} Client is ready!\n`);
+        socket.emit('message', log_1.Log.addLog(`Client is ready!`));
     });
 });
 server.listen(process.env.PORT || 5000, () => {

@@ -21,20 +21,34 @@
     </header>
     <img id="qrcode" class="max-w-md max-h-md"></img>
 
-    <main class="min-h-screen flex place-content-center">
-      <ul class="log rounded-md bg-gray-100 w-[90vw] py-4 my-10">
-      </ul>
+    <main class="min-h-screen flex place-content-center flex-col">
+        <div class="wrapper rounded-md bg-gray-100 md:w-[90vw] w-[100vw] mb-10" >
+        <ul id="last-log" class="py-4 mb-2">
+          <h2 class="text-3xl text-center h-20 my-4 flex place-content-center place-items-center text-gray-600 opacity-80 border-y border-gray-300">Last Log</h2>
+        </ul>
+        <ul id="current-log" class="py-4 mb-2">
+          <h2 class="text-3xl text-center h-20 my-4 flex place-content-center place-items-center text-gray-600 opacity-80 border-y border-gray-300">Current Log</h2>
+        </ul>
+      </div>
     </main>
   </body>
   <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
   <script>
     document.addEventListener("DOMContentLoaded", (event) => {
-      let socket = io.connect("http://localhost:5000", {path : '/socket.io'});
+      let socket = io.connect("http://localhost:8080", {path : '/socket.io'});
 
       socket.on('message', (data) => {
-        document.querySelector('ul').innerHTML += `
+        document.querySelector('#current-log').innerHTML += `
           <li class="mb-1 text-gray-600 opacity-70 px-4">${data}</li>
         `;
+      });
+
+      socket.on('lastlog', (datas) => {
+        let elementLog = '';
+        datas.split("\n").forEach(data => {
+          elementLog += `<li class="mb-1 text-gray-600 opacity-70 px-4">${data}</li>`;
+        });
+        document.querySelector('#last-log').innerHTML += elementLog;
       });
 
       socket.on("qrcode", (url) => {

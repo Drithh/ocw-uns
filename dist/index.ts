@@ -5,8 +5,7 @@ import { CronJob } from 'cron';
 import express from 'express';
 const http = require('http');
 const qrcode = require('qrcode');
-import { getTime } from './time';
-
+import { Log } from './log';
 import {
   Chat,
   ChatId,
@@ -128,9 +127,9 @@ const main = async () => {
   file.read();
 
   for (const profile of file.profiles) {
-    io.sockets.emit(`message`, `${getTime()} Started ${profile.email}`);
+    io.sockets.emit(`message`, Log.addLog(`Started ${profile.email}`));
 
-    io.sockets.emit(`message`, `${getTime()} Start Scrapping`);
+    io.sockets.emit(`message`, Log.addLog(`Start Scrapping`));
 
     const page = await client.pupBrowser.newPage();
 
@@ -158,17 +157,23 @@ const setup = async () => {
 
 setup();
 
+io.on('connect', async () => {
+  console.log('connected');
+  await Log.read();
+  io.sockets.emit('lastlog', Log.logs);
+});
+
 io.on('connection', (socket: any) => {
-  socket.emit('message', `${getTime()} Connecting...`);
+  socket.emit('message', Log.addLog(`Connecting...`));
   client.on('qr', (qr: QRCode) => {
     qrcode.toDataURL(qr, (err: any, url: string) => {
-      socket.emit('message', `${getTime()} Please Scan QRCode`);
+      socket.emit('message', Log.addLog(`Please Scan QRCode`));
       socket.emit('qrcode', url);
     });
   });
   client.on('ready', () => {
     console.log('Client is ready');
-    socket.emit('message', `${getTime()} Client is ready!`);
+    socket.emit('message', Log.addLog(`Client is ready!`));
   });
 });
 

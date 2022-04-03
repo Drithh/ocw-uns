@@ -1,9 +1,8 @@
 import { Page } from 'puppeteer';
-import { getTime } from './time';
+import { Log } from './log';
 
 export class Scrapper {
   constructor(private page: Page, private profile: any, private io: any) {}
-
   public main = async () => {
     try {
       await this.login();
@@ -17,7 +16,7 @@ export class Scrapper {
     try {
       this.io.sockets.emit(
         `message`,
-        `${getTime()} Mencoba Login ${this.profile.email}`
+        Log.addLog(`Mencoba Login ${this.profile.email}`)
       );
       const response = await this.page.goto(
         'https://ocw.uns.ac.id/saml/login',
@@ -38,11 +37,11 @@ export class Scrapper {
             this.profile.password
           );
           await this.page.click('.btn-flat');
-          this.io.sockets.emit(`message`, `${getTime()} Login Berhasil`);
+          this.io.sockets.emit(`message`, Log.addLog(`Login Berhasil`));
         } else {
           this.io.sockets.emit(
             `message`,
-            `${getTime()} Login Menggunakan Sesi Yang Sebelumnya`
+            Log.addLog(`Login Menggunakan Sesi Yang Sebelumnya`)
           );
         }
         await this.page.waitForSelector('nav.navbar.navbar-default');
@@ -50,7 +49,7 @@ export class Scrapper {
     } catch (error) {
       this.io.sockets.emit(
         `message`,
-        `${getTime()} Gagal Login ${this.profile.email}`
+        Log.addLog(`Gagal Login ${this.profile.email}`)
       );
       console.log(error);
     }
@@ -80,7 +79,7 @@ export class Scrapper {
       if (alphaCourses.length > 0) {
         this.io.sockets.emit(
           `message`,
-          `${getTime()} Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`
+          Log.addLog(`Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`)
         );
         for (const alphaCourse of alphaCourses) {
           await this.absen([alphaCourse[0], alphaCourse[1]]);
@@ -88,13 +87,13 @@ export class Scrapper {
       } else {
         this.io.sockets.emit(
           `message`,
-          `${getTime()} Tidak Terdapat Mata Kuliah Berlangsung`
+          Log.addLog(`Tidak Terdapat Mata Kuliah Berlangsung`)
         );
       }
     } catch (error) {
       this.io.sockets.emit(
         `message`,
-        `${getTime()} Gagal Query Kuliah Berlangsung ${this.profile.email}`
+        Log.addLog(`Gagal Query Kuliah Berlangsung ${this.profile.email}`)
       );
       console.log(error);
     }
@@ -104,13 +103,13 @@ export class Scrapper {
     try {
       this.io.sockets.emit(
         `message`,
-        `${getTime()} Mencari Link Absen ${namaMataKuliah}`
+        Log.addLog(`Mencari Link Absen ${namaMataKuliah}`)
       );
       const linkPresensi = await this.findLinkAbsen(linkKelas);
 
       this.io.sockets.emit(
         `message`,
-        `${getTime()} Mencoba Absen ${namaMataKuliah}`
+        Log.addLog(`Mencoba Absen ${namaMataKuliah}`)
       );
       await this.page.goto(linkPresensi, {
         waitUntil: 'networkidle0',
@@ -133,15 +132,15 @@ export class Scrapper {
         waitUntil: 'networkidle0',
       });
 
-      this.io.sockets.emit(`message`, `${getTime()} ${linkURL}`);
+      this.io.sockets.emit(`message`, Log.addLog(`${linkURL}`));
       this.io.sockets.emit(
         `message`,
-        `${getTime()} Absen ${namaMataKuliah} Berhasil`
+        Log.addLog(`Absen ${namaMataKuliah} Berhasil`)
       );
     } catch (error) {
       this.io.sockets.emit(
         `message`,
-        `${getTime()} Gagal Absen ${this.profile.email}`
+        Log.addLog(`Gagal Absen ${this.profile.email}`)
       );
       console.log(error);
     }

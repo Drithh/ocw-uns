@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scrapper = void 0;
-const time_1 = require("./time");
+const log_1 = require("./log");
 class Scrapper {
     constructor(page, profile, io) {
         this.page = page;
@@ -27,7 +27,7 @@ class Scrapper {
         });
         this.login = () => __awaiter(this, void 0, void 0, function* () {
             try {
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Mencoba Login ${this.profile.email}`);
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`Mencoba Login ${this.profile.email}`));
                 const response = yield this.page.goto('https://ocw.uns.ac.id/saml/login', {
                     waitUntil: 'networkidle0',
                 });
@@ -37,16 +37,16 @@ class Scrapper {
                         yield this.page.type('input.form-control[type="text"]', this.profile.email);
                         yield this.page.type('input.form-control[type="password"]', this.profile.password);
                         yield this.page.click('.btn-flat');
-                        this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Login Berhasil`);
+                        this.io.sockets.emit(`message`, log_1.Log.addLog(`Login Berhasil`));
                     }
                     else {
-                        this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Login Menggunakan Sesi Yang Sebelumnya`);
+                        this.io.sockets.emit(`message`, log_1.Log.addLog(`Login Menggunakan Sesi Yang Sebelumnya`));
                     }
                     yield this.page.waitForSelector('nav.navbar.navbar-default');
                 }
             }
             catch (error) {
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Gagal Login ${this.profile.email}`);
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`Gagal Login ${this.profile.email}`));
                 console.log(error);
             }
         });
@@ -65,25 +65,25 @@ class Scrapper {
                     ]);
                 });
                 if (alphaCourses.length > 0) {
-                    this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`);
+                    this.io.sockets.emit(`message`, log_1.Log.addLog(`Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`));
                     for (const alphaCourse of alphaCourses) {
                         yield this.absen([alphaCourse[0], alphaCourse[1]]);
                     }
                 }
                 else {
-                    this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Tidak Terdapat Mata Kuliah Berlangsung`);
+                    this.io.sockets.emit(`message`, log_1.Log.addLog(`Tidak Terdapat Mata Kuliah Berlangsung`));
                 }
             }
             catch (error) {
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Gagal Query Kuliah Berlangsung ${this.profile.email}`);
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`Gagal Query Kuliah Berlangsung ${this.profile.email}`));
                 console.log(error);
             }
         });
         this.absen = ([namaMataKuliah, linkKelas]) => __awaiter(this, void 0, void 0, function* () {
             try {
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Mencari Link Absen ${namaMataKuliah}`);
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`Mencari Link Absen ${namaMataKuliah}`));
                 const linkPresensi = yield this.findLinkAbsen(linkKelas);
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Mencoba Absen ${namaMataKuliah}`);
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`Mencoba Absen ${namaMataKuliah}`));
                 yield this.page.goto(linkPresensi, {
                     waitUntil: 'networkidle0',
                 });
@@ -101,11 +101,11 @@ class Scrapper {
                 yield this.page.goto('https://ocw.uns.ac.id/', {
                     waitUntil: 'networkidle0',
                 });
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} ${linkURL}`);
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Absen ${namaMataKuliah} Berhasil`);
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`${linkURL}`));
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`Absen ${namaMataKuliah} Berhasil`));
             }
             catch (error) {
-                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Gagal Absen ${this.profile.email}`);
+                this.io.sockets.emit(`message`, log_1.Log.addLog(`Gagal Absen ${this.profile.email}`));
                 console.log(error);
             }
         });
