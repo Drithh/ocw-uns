@@ -1,11 +1,11 @@
 import { QRCode } from 'jsqr';
-import { File } from './file';
+import { Profiles, Log } from './file';
 import { Scrapper } from './scrapper';
 import { CronJob } from 'cron';
 import express from 'express';
+import { addAccount, messageList, checkForm } from './util';
 const http = require('http');
 const qrcode = require('qrcode');
-import { Log } from './log';
 import {
   Chat,
   ChatId,
@@ -15,11 +15,18 @@ import {
   Message,
 } from 'whatsapp-web.js';
 
+const whitelistedNumber = '6281293586210|1234';
+// gunakan '|' untuk memisahkan antara nomor satu dengna nomor lain
+
+const autoAbsen = '0 */15 7-15 * * 1-5';
+// https://crontab.cronhub.io/
+
+let summary = {};
+let master: Chat;
+
 const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server);
-
-let master: Chat;
 
 const client = new Client({
   puppeteer: {
@@ -32,108 +39,75 @@ const client = new Client({
 });
 
 client.on('message', async (message: Message) => {
-  if (message.from === '6281293586210@c.us') {
-    if (message.body === 'main') {
-      main();
-    } else if (message.body === 'log') {
+  if (new RegExp(whitelistedNumber).test(message.from.replace(/[^\d.]/g, ''))) {
+    if (message.body === 'absen') {
+      main(await message.getChat());
+    } else if (message.body === 'master') {
       master = await message.getChat();
     } else if (message.body === 'user form') {
       message.reply(
         `User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\nlongitude: 110.6019`
       );
+    } else if (message.body === 'summary') {
+      try {
+        const list = await messageList('history');
+        if (!list) {
+          message.reply('Akun belum ada');
+        }
+        (await message.getChat()).sendMessage(list);
+      } catch (error) {
+        console.log(error);
+      }
     } else if (message.body.includes('User')) {
       try {
-        const profile = message.body.split('\n');
-        const user = {
-          email: profile[1].split(':')[1].replace(/\s/g, ''),
-          password: profile[2].split(':')[1].replace(/\s/g, ''),
-          geolocation: {
-            latitude: profile[3].split(':')[1].replace(/\s/g, ''),
-            longitude: profile[4].split(':')[1].replace(/\s/g, ''),
-          },
-        };
+        const user = checkForm(message);
         addAccount(user, await message.getChat());
       } catch (error) {
         message.reply('Gagal Menambahkan User\nFormat Salah?');
-        console.log(error);
       }
     } else if (message.body === 'remove user') {
       try {
-        const file: File = new File();
-        if (!(await file.read())) {
+        const list = await messageList('remove');
+        if (!list) {
           message.reply('Akun belum ada');
-          return;
         }
-        let row = new Array();
-        file.profiles.forEach((profile) => {
-          row.push({
-            id: `remove ${profile.email}`,
-            title: `${profile.email}`,
-          });
-        });
-        let sections = [
-          {
-            title: `List Akun`,
-            rows: row,
-          },
-        ];
-        let list = new List(``, `Lihat Akun`, sections, `List Akun`, 'footer');
-
         (await message.getChat()).sendMessage(list);
       } catch (error) {
         console.log(error);
       }
     } else if (message.type === 'list_response') {
       if (message.selectedRowId.includes('remove')) {
-        const file: File = new File();
-        file.read();
-        file.profiles.forEach((profile, index) => {
+        Profiles.readProfile();
+        Profiles.profiles.forEach((profile, index) => {
           if (profile.email === message.selectedRowId.split(' ')[1]) {
-            file.profiles.splice(index, 1);
+            Profiles.profiles.splice(index, 1);
           }
         });
-        file.write();
+        Profiles.addProfile();
         (await message.getChat()).sendMessage(`Berhasil Menghapus Akun`);
+      } else if (message.selectedRowId.includes('history')) {
+        let summary = await Profiles.getSummary(
+          message.selectedRowId.split(' ')[1]
+        );
+        console.log(summary);
+        message.reply(summary);
       }
     }
   }
   // console.log(message);
 });
 
-const addAccount = async (user: any, chat: Chat) => {
-  try {
-    let file: File = new File();
-    file.read();
-    if (file.check(user)) {
-      chat.sendMessage(`User sudah ada\nMencoba mengedit ulang`);
-      file.profiles.forEach((profile) => {
-        if (profile.email == user.email) {
-          profile.password = user.password;
-          profile.geolocation = user.geolocation;
-        }
-      });
-    } else {
-      file.profiles.push(user);
-    }
-    chat.sendMessage(`Berhasil Menambahkan User`);
-    file.write();
-  } catch (error) {
-    console.log(error);
-  }
-};
+const main = async (chat?: Chat) => {
+  Profiles.readProfile();
 
-const main = async () => {
-  let file: File = new File();
-  file.read();
-
-  for (const profile of file.profiles) {
+  for (const profile of Profiles.profiles) {
     io.sockets.emit(`message`, Log.addLog(`Started ${profile.email}`));
 
     io.sockets.emit(`message`, Log.addLog(`Start Scrapping`));
 
     const page = await client.pupBrowser.newPage();
 
-    const scrapper = new Scrapper(page, profile, io);
+    const scrapper = new Scrapper(page, profile, io, chat);
 
     await scrapper.main();
 
@@ -142,6 +116,7 @@ const main = async () => {
     await page.close();
   }
 };
+
 app.use(express.static(__dirname));
 app.get('/', (req, res) => {
   res.sendFile('index.html', { root: __dirname });
@@ -152,7 +127,7 @@ const setup = async () => {
   await client.pupBrowser
     .defaultBrowserContext()
     .overridePermissions('https://ocw.uns.ac.id', ['geolocation']);
-  new CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
+  new CronJob(autoAbsen, main, null, true, 'Asia/Jakarta');
 };
 
 setup();

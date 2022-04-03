@@ -1,8 +1,13 @@
 import { Page } from 'puppeteer';
-import { Log } from './log';
-
+import { Chat } from 'whatsapp-web.js';
+import { Log, Profiles } from './file';
 export class Scrapper {
-  constructor(private page: Page, private profile: any, private io: any) {}
+  constructor(
+    private page: Page,
+    private profile: any,
+    private io: any,
+    private chat?: Chat
+  ) {}
   public main = async () => {
     try {
       await this.login();
@@ -18,6 +23,7 @@ export class Scrapper {
         `message`,
         Log.addLog(`Mencoba Login ${this.profile.email}`)
       );
+      this.chat?.sendMessage(`Mencoba Login ${this.profile.email}`);
       const response = await this.page.goto(
         'https://ocw.uns.ac.id/saml/login',
         {
@@ -81,6 +87,10 @@ export class Scrapper {
           `message`,
           Log.addLog(`Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`)
         );
+        this.chat?.sendMessage(
+          `Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`
+        );
+
         for (const alphaCourse of alphaCourses) {
           await this.absen([alphaCourse[0], alphaCourse[1]]);
         }
@@ -89,6 +99,8 @@ export class Scrapper {
           `message`,
           Log.addLog(`Tidak Terdapat Mata Kuliah Berlangsung`)
         );
+        this.chat?.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
+        Profiles.addSummary(this.profile.email);
       }
     } catch (error) {
       this.io.sockets.emit(
@@ -111,6 +123,8 @@ export class Scrapper {
         `message`,
         Log.addLog(`Mencoba Absen ${namaMataKuliah}`)
       );
+      this.chat?.sendMessage(`Mencoba Absen ${namaMataKuliah}`);
+
       await this.page.goto(linkPresensi, {
         waitUntil: 'networkidle0',
       });
@@ -133,6 +147,10 @@ export class Scrapper {
       });
 
       this.io.sockets.emit(`message`, Log.addLog(`${linkURL}`));
+      this.chat?.sendMessage(`${linkURL}`);
+
+      Profiles.addSummary(this.profile.email, linkURL);
+
       this.io.sockets.emit(
         `message`,
         Log.addLog(`Absen ${namaMataKuliah} Berhasil`)
