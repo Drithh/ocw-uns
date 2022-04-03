@@ -43,7 +43,17 @@ client.on('message', async (message: Message) => {
     if (message.body === 'absen') {
       main(await message.getChat());
     } else if (message.body === 'master') {
-      master = await message.getChat();
+      const newMaster = await message.getChat();
+      if (!master) {
+        message.reply(`Menambahkanmu sebagai master`);
+        master = await message.getChat();
+      } else if (master.id.user == newMaster.id.user) {
+        message.reply(`Menghapusmu dari master`);
+        master = null;
+      } else {
+        message.reply(`Menambahkanmu sebagai master`);
+        master = await message.getChat();
+      }
     } else if (message.body === 'user form') {
       message.reply(
         `User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\nlongitude: 110.6019`
@@ -92,6 +102,12 @@ client.on('message', async (message: Message) => {
         console.log(summary);
         message.reply(summary);
       }
+    } else if (message.body === 'help') {
+      message.reply(
+        `Help\nabsen: absen akun\nmaster: bot akan mengirim log auto absen\nsummary: summary bot pada hari ini\nuser form: form template tambah akun\nremove user: menghapus user\nhelp: melihat help`
+      );
+    } else {
+      message.reply(`Perintah Tidak ditemukan coba kirim 'help'`);
     }
   }
   // console.log(message);
@@ -99,12 +115,10 @@ client.on('message', async (message: Message) => {
 
 const main = async (chat?: Chat) => {
   Profiles.readProfile();
-
+  if (chat == null) {
+    chat = master;
+  }
   for (const profile of Profiles.profiles) {
-    io.sockets.emit(`message`, Log.addLog(`Started ${profile.email}`));
-
-    io.sockets.emit(`message`, Log.addLog(`Start Scrapping`));
-
     const page = await client.pupBrowser.newPage();
 
     const scrapper = new Scrapper(page, profile, io, chat);

@@ -95,13 +95,6 @@ abstract class Profiles {
 abstract class Log {
   public static logs = '';
 
-  private static getTime = () => {
-    var timestamp = new Date();
-    const offset = timestamp.getTimezoneOffset() * 60000;
-    const local = new Date(timestamp.getTime() - offset);
-    return `[${local.toISOString().slice(0, 19).replace('T', ' ')}]\t`;
-  };
-
   public static read = async () => {
     try {
       if (fs.existsSync('./log.txt')) {
@@ -120,7 +113,9 @@ abstract class Log {
   };
 
   public static addLog = (text: string) => {
-    const log = `${Log.getTime()} ${text}`;
+    const moment = require('moment-timezone');
+    const time = moment().tz('Asia/Jakarta').format('YYYY-MM-DD HH:mm:ss');
+    const log = `[${time}] ${text}`;
     this.logs += `${log}\n`;
     if (this.logs.match(/\r?\n/g).length >= 100) {
       this.logs = this.logs.substring(this.logs.indexOf('\n') + 1);

@@ -132,12 +132,6 @@ class Log {
 exports.Log = Log;
 _b = Log;
 Log.logs = '';
-Log.getTime = () => {
-    var timestamp = new Date();
-    const offset = timestamp.getTimezoneOffset() * 60000;
-    const local = new Date(timestamp.getTime() - offset);
-    return `[${local.toISOString().slice(0, 19).replace('T', ' ')}]\t`;
-};
 Log.read = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (fs.existsSync('./log.txt')) {
@@ -157,7 +151,9 @@ Log.read = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 Log.addLog = (text) => {
-    const log = `${Log.getTime()} ${text}`;
+    const moment = require('moment-timezone');
+    const time = moment().tz('Asia/Jakarta').format('YYYY-MM-DD HH:mm:ss');
+    const log = `[${time}] ${text}`;
     _b.logs += `${log}\n`;
     if (_b.logs.match(/\r?\n/g).length >= 100) {
         _b.logs = _b.logs.substring(_b.logs.indexOf('\n') + 1);

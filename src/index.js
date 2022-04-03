@@ -40,7 +40,19 @@ client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* ()
             main(yield message.getChat());
         }
         else if (message.body === 'master') {
-            master = yield message.getChat();
+            const newMaster = yield message.getChat();
+            if (!master) {
+                message.reply(`Menambahkanmu sebagai master`);
+                master = yield message.getChat();
+            }
+            else if (master.id.user == newMaster.id.user) {
+                message.reply(`Menghapusmu dari master`);
+                master = null;
+            }
+            else {
+                message.reply(`Menambahkanmu sebagai master`);
+                master = yield message.getChat();
+            }
         }
         else if (message.body === 'user form') {
             message.reply(`User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\nlongitude: 110.6019`);
@@ -95,13 +107,20 @@ client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* ()
                 message.reply(summary);
             }
         }
+        else if (message.body === 'help') {
+            message.reply(`Help\nabsen: absen akun\nmaster: bot akan mengirim log auto absen\nsummary: summary bot pada hari ini\nuser form: form template tambah akun\nremove user: menghapus user\nhelp: melihat help`);
+        }
+        else {
+            message.reply(`Perintah Tidak ditemukan coba kirim 'help'`);
+        }
     }
 }));
 const main = (chat) => __awaiter(void 0, void 0, void 0, function* () {
     file_1.Profiles.readProfile();
+    if (chat == null) {
+        chat = master;
+    }
     for (const profile of file_1.Profiles.profiles) {
-        io.sockets.emit(`message`, file_1.Log.addLog(`Started ${profile.email}`));
-        io.sockets.emit(`message`, file_1.Log.addLog(`Start Scrapping`));
         const page = yield client.pupBrowser.newPage();
         const scrapper = new scrapper_1.Scrapper(page, profile, io, chat);
         yield scrapper.main();

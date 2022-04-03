@@ -19,6 +19,8 @@ class Scrapper {
         this.chat = chat;
         this.main = () => __awaiter(this, void 0, void 0, function* () {
             try {
+                this.io.sockets.emit(`message`, file_1.Log.addLog(`Started ${this.profile.email}`));
+                this.io.sockets.emit(`message`, file_1.Log.addLog(`Start Scrapping`));
                 yield this.login();
                 yield this.kuliahBerlangsung();
             }

@@ -10,6 +10,12 @@ export class Scrapper {
   ) {}
   public main = async () => {
     try {
+      this.io.sockets.emit(
+        `message`,
+        Log.addLog(`Started ${this.profile.email}`)
+      );
+
+      this.io.sockets.emit(`message`, Log.addLog(`Start Scrapping`));
       await this.login();
       await this.kuliahBerlangsung();
     } catch (error) {
