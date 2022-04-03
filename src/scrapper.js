@@ -10,11 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scrapper = void 0;
+const time_1 = require("./time");
 class Scrapper {
-    constructor(page, profile, chat) {
+    constructor(page, profile, io) {
         this.page = page;
         this.profile = profile;
-        this.chat = chat;
+        this.io = io;
         this.main = () => __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.login();
@@ -25,9 +26,8 @@ class Scrapper {
             }
         });
         this.login = () => __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
             try {
-                (_a = this.chat) === null || _a === void 0 ? void 0 : _a.sendMessage(`Mencoba Login ${this.profile.email}`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Mencoba Login ${this.profile.email}`);
                 const response = yield this.page.goto('https://ocw.uns.ac.id/saml/login', {
                     waitUntil: 'networkidle0',
                 });
@@ -37,21 +37,20 @@ class Scrapper {
                         yield this.page.type('input.form-control[type="text"]', this.profile.email);
                         yield this.page.type('input.form-control[type="password"]', this.profile.password);
                         yield this.page.click('.btn-flat');
-                        (_b = this.chat) === null || _b === void 0 ? void 0 : _b.sendMessage('Login Berhasil');
+                        this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Login Berhasil`);
                     }
                     else {
-                        (_c = this.chat) === null || _c === void 0 ? void 0 : _c.sendMessage('Login Menggunakan Sesi Yang Sebelumnya');
+                        this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Login Menggunakan Sesi Yang Sebelumnya`);
                     }
                     yield this.page.waitForSelector('nav.navbar.navbar-default');
                 }
             }
             catch (error) {
-                (_d = this.chat) === null || _d === void 0 ? void 0 : _d.sendMessage(`Gagal Login ${this.profile.email}`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Gagal Login ${this.profile.email}`);
                 console.log(error);
             }
         });
         this.kuliahBerlangsung = () => __awaiter(this, void 0, void 0, function* () {
-            var _e, _f, _g;
             try {
                 yield this.page.goto('https://ocw.uns.ac.id/presensi-online-mahasiswa/kuliah-berlangsung', {
                     waitUntil: 'networkidle0',
@@ -66,26 +65,25 @@ class Scrapper {
                     ]);
                 });
                 if (alphaCourses.length > 0) {
-                    (_e = this.chat) === null || _e === void 0 ? void 0 : _e.sendMessage(`Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`);
+                    this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`);
                     for (const alphaCourse of alphaCourses) {
                         yield this.absen([alphaCourse[0], alphaCourse[1]]);
                     }
                 }
                 else {
-                    (_f = this.chat) === null || _f === void 0 ? void 0 : _f.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
+                    this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Tidak Terdapat Mata Kuliah Berlangsung`);
                 }
             }
             catch (error) {
-                (_g = this.chat) === null || _g === void 0 ? void 0 : _g.sendMessage(`Gagal Query Kuliah Berlangsung ${this.profile.email}`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Gagal Query Kuliah Berlangsung ${this.profile.email}`);
                 console.log(error);
             }
         });
         this.absen = ([namaMataKuliah, linkKelas]) => __awaiter(this, void 0, void 0, function* () {
-            var _h, _j, _k, _l, _m;
             try {
-                (_h = this.chat) === null || _h === void 0 ? void 0 : _h.sendMessage(`Mencari Link Absen ${namaMataKuliah}`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Mencari Link Absen ${namaMataKuliah}`);
                 const linkPresensi = yield this.findLinkAbsen(linkKelas);
-                (_j = this.chat) === null || _j === void 0 ? void 0 : _j.sendMessage(`Mencoba Absen ${namaMataKuliah}`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Mencoba Absen ${namaMataKuliah}`);
                 yield this.page.goto(linkPresensi, {
                     waitUntil: 'networkidle0',
                 });
@@ -103,11 +101,11 @@ class Scrapper {
                 yield this.page.goto('https://ocw.uns.ac.id/', {
                     waitUntil: 'networkidle0',
                 });
-                (_k = this.chat) === null || _k === void 0 ? void 0 : _k.sendMessage(linkURL);
-                (_l = this.chat) === null || _l === void 0 ? void 0 : _l.sendMessage(`Absen ${namaMataKuliah} Berhasil`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} ${linkURL}`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Absen ${namaMataKuliah} Berhasil`);
             }
             catch (error) {
-                (_m = this.chat) === null || _m === void 0 ? void 0 : _m.sendMessage(`Gagal Absen ${this.profile.email}`);
+                this.io.sockets.emit(`message`, `${(0, time_1.getTime)()} Gagal Absen ${this.profile.email}`);
                 console.log(error);
             }
         });

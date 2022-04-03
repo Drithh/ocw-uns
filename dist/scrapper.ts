@@ -1,7 +1,8 @@
 import { Page } from 'puppeteer';
-import { Chat } from 'whatsapp-web.js';
+import { getTime } from './time';
+
 export class Scrapper {
-  constructor(private page: Page, private profile: any, private chat?: Chat) {}
+  constructor(private page: Page, private profile: any, private io: any) {}
 
   public main = async () => {
     try {
@@ -14,7 +15,10 @@ export class Scrapper {
 
   private login = async () => {
     try {
-      this.chat?.sendMessage(`Mencoba Login ${this.profile.email}`);
+      this.io.sockets.emit(
+        `message`,
+        `${getTime()} Mencoba Login ${this.profile.email}`
+      );
       const response = await this.page.goto(
         'https://ocw.uns.ac.id/saml/login',
         {
@@ -34,14 +38,20 @@ export class Scrapper {
             this.profile.password
           );
           await this.page.click('.btn-flat');
-          this.chat?.sendMessage('Login Berhasil');
+          this.io.sockets.emit(`message`, `${getTime()} Login Berhasil`);
         } else {
-          this.chat?.sendMessage('Login Menggunakan Sesi Yang Sebelumnya');
+          this.io.sockets.emit(
+            `message`,
+            `${getTime()} Login Menggunakan Sesi Yang Sebelumnya`
+          );
         }
         await this.page.waitForSelector('nav.navbar.navbar-default');
       }
     } catch (error) {
-      this.chat?.sendMessage(`Gagal Login ${this.profile.email}`);
+      this.io.sockets.emit(
+        `message`,
+        `${getTime()} Gagal Login ${this.profile.email}`
+      );
       console.log(error);
     }
   };
@@ -68,18 +78,23 @@ export class Scrapper {
         ]);
       });
       if (alphaCourses.length > 0) {
-        this.chat?.sendMessage(
-          `Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`
+        this.io.sockets.emit(
+          `message`,
+          `${getTime()} Terdapat ${alphaCourses.length} Mata Kuliah Berlangsung`
         );
         for (const alphaCourse of alphaCourses) {
           await this.absen([alphaCourse[0], alphaCourse[1]]);
         }
       } else {
-        this.chat?.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
+        this.io.sockets.emit(
+          `message`,
+          `${getTime()} Tidak Terdapat Mata Kuliah Berlangsung`
+        );
       }
     } catch (error) {
-      this.chat?.sendMessage(
-        `Gagal Query Kuliah Berlangsung ${this.profile.email}`
+      this.io.sockets.emit(
+        `message`,
+        `${getTime()} Gagal Query Kuliah Berlangsung ${this.profile.email}`
       );
       console.log(error);
     }
@@ -87,10 +102,16 @@ export class Scrapper {
 
   private absen = async ([namaMataKuliah, linkKelas]: [string, string]) => {
     try {
-      this.chat?.sendMessage(`Mencari Link Absen ${namaMataKuliah}`);
+      this.io.sockets.emit(
+        `message`,
+        `${getTime()} Mencari Link Absen ${namaMataKuliah}`
+      );
       const linkPresensi = await this.findLinkAbsen(linkKelas);
 
-      this.chat?.sendMessage(`Mencoba Absen ${namaMataKuliah}`);
+      this.io.sockets.emit(
+        `message`,
+        `${getTime()} Mencoba Absen ${namaMataKuliah}`
+      );
       await this.page.goto(linkPresensi, {
         waitUntil: 'networkidle0',
       });
@@ -112,10 +133,16 @@ export class Scrapper {
         waitUntil: 'networkidle0',
       });
 
-      this.chat?.sendMessage(linkURL);
-      this.chat?.sendMessage(`Absen ${namaMataKuliah} Berhasil`);
+      this.io.sockets.emit(`message`, `${getTime()} ${linkURL}`);
+      this.io.sockets.emit(
+        `message`,
+        `${getTime()} Absen ${namaMataKuliah} Berhasil`
+      );
     } catch (error) {
-      this.chat?.sendMessage(`Gagal Absen ${this.profile.email}`);
+      this.io.sockets.emit(
+        `message`,
+        `${getTime()} Gagal Absen ${this.profile.email}`
+      );
       console.log(error);
     }
   };

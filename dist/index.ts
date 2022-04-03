@@ -1,43 +1,46 @@
-import { QRCode } from './../node_modules/jsqr/dist/index.d';
+import { QRCode } from 'jsqr';
 import { File } from './file';
 import { Scrapper } from './scrapper';
 import { CronJob } from 'cron';
-const qrcode = require('qrcode-terminal');
-import { Chat, ChatId, Client, List, Message } from 'whatsapp-web.js';
+import express from 'express';
+const http = require('http');
+const qrcode = require('qrcode');
+import { getTime } from './time';
 
-// TODO
-// Fix Timeout Puppeteer
-// save link kelas
+import {
+  Chat,
+  ChatId,
+  Client,
+  List,
+  LocalAuth,
+  Message,
+} from 'whatsapp-web.js';
+
+const app = express();
+const server = http.createServer(app);
+const io = require('socket.io')(server);
 
 let master: Chat;
 
 const client = new Client({
   puppeteer: {
     headless: true,
-    userDataDir: './userData',
+    // userDataDir: './userData',
     args: ['--no-sandbox'],
   },
 
-  // authStrategy: new LocalAuth(),
-});
-
-client.on('qr', (qr: QRCode) => {
-  qrcode.generate(qr, { small: true });
-});
-
-client.on('ready', () => {
-  console.log('Client is ready!');
+  authStrategy: new LocalAuth(),
 });
 
 client.on('message', async (message: Message) => {
   if (message.from === '6281293586210@c.us') {
     if (message.body === 'main') {
-      main(await message.getChat());
+      main();
     } else if (message.body === 'log') {
       master = await message.getChat();
     } else if (message.body === 'user form') {
       message.reply(
-        `User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\n longitude: 110.6019`
+        `User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\nlongitude: 110.6019`
       );
     } else if (message.body.includes('User')) {
       try {
@@ -59,7 +62,7 @@ client.on('message', async (message: Message) => {
       try {
         const file: File = new File();
         if (!(await file.read())) {
-          message.reply('File tidak ditemukan');
+          message.reply('Akun belum ada');
           return;
         }
         let row = new Array();
@@ -94,8 +97,8 @@ client.on('message', async (message: Message) => {
         (await message.getChat()).sendMessage(`Berhasil Menghapus Akun`);
       }
     }
-    // console.log(message);
   }
+  // console.log(message);
 });
 
 const addAccount = async (user: any, chat: Chat) => {
@@ -120,20 +123,18 @@ const addAccount = async (user: any, chat: Chat) => {
   }
 };
 
-const main = async (chat?: Chat) => {
+const main = async () => {
   let file: File = new File();
   file.read();
 
-  if (chat === null) {
-    chat = master;
-  }
   for (const profile of file.profiles) {
-    chat?.sendMessage(`Started ${profile.email}`);
-    chat?.sendMessage(`Start Scrapping`);
+    io.sockets.emit(`message`, `${getTime()} Started ${profile.email}`);
+
+    io.sockets.emit(`message`, `${getTime()} Start Scrapping`);
 
     const page = await client.pupBrowser.newPage();
 
-    const scrapper = new Scrapper(page, profile, chat);
+    const scrapper = new Scrapper(page, profile, io);
 
     await scrapper.main();
 
@@ -142,17 +143,35 @@ const main = async (chat?: Chat) => {
     await page.close();
   }
 };
-let job: CronJob;
+app.use(express.static(__dirname));
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: __dirname });
+});
 
-const setJob = async () => {
-  new CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
-};
 const setup = async () => {
   await client.initialize();
   await client.pupBrowser
     .defaultBrowserContext()
     .overridePermissions('https://ocw.uns.ac.id', ['geolocation']);
-  setJob();
+  new CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
 };
 
 setup();
+
+io.on('connection', (socket: any) => {
+  socket.emit('message', `${getTime()} Connecting...`);
+  client.on('qr', (qr: QRCode) => {
+    qrcode.toDataURL(qr, (err: any, url: string) => {
+      socket.emit('message', `${getTime()} Please Scan QRCode`);
+      socket.emit('qrcode', url);
+    });
+  });
+  client.on('ready', () => {
+    console.log('Client is ready');
+    socket.emit('message', `${getTime()} Client is ready!`);
+  });
+});
+
+server.listen(process.env.PORT || 5000, () => {
+  console.log('Server started');
+});

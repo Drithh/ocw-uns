@@ -8,36 +8,39 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const file_1 = require("./file");
 const scrapper_1 = require("./scrapper");
 const cron_1 = require("cron");
-const qrcode = require('qrcode-terminal');
+const express_1 = __importDefault(require("express"));
+const http = require('http');
+const qrcode = require('qrcode');
+const time_1 = require("./time");
 const whatsapp_web_js_1 = require("whatsapp-web.js");
+const app = (0, express_1.default)();
+const server = http.createServer(app);
+const io = require('socket.io')(server);
 let master;
 const client = new whatsapp_web_js_1.Client({
     puppeteer: {
         headless: true,
-        userDataDir: './userData',
         args: ['--no-sandbox'],
     },
-});
-client.on('qr', (qr) => {
-    qrcode.generate(qr, { small: true });
-});
-client.on('ready', () => {
-    console.log('Client is ready!');
+    authStrategy: new whatsapp_web_js_1.LocalAuth(),
 });
 client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* () {
     if (message.from === '6281293586210@c.us') {
         if (message.body === 'main') {
-            main(yield message.getChat());
+            main();
         }
         else if (message.body === 'log') {
             master = yield message.getChat();
         }
         else if (message.body === 'user form') {
-            message.reply(`User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\n longitude: 110.6019`);
+            message.reply(`User\nemail: email@gmail.com\npass: password\nlatitude: -7.7049\nlongitude: 110.6019`);
         }
         else if (message.body.includes('User')) {
             try {
@@ -61,7 +64,7 @@ client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* ()
             try {
                 const file = new file_1.File();
                 if (!(yield file.read())) {
-                    message.reply('File tidak ditemukan');
+                    message.reply('Akun belum ada');
                     return;
                 }
                 let row = new Array();
@@ -122,33 +125,46 @@ const addAccount = (user, chat) => __awaiter(void 0, void 0, void 0, function* (
         console.log(error);
     }
 });
-const main = (chat) => __awaiter(void 0, void 0, void 0, function* () {
+const main = () => __awaiter(void 0, void 0, void 0, function* () {
     let file = new file_1.File();
     file.read();
-    if (chat === null) {
-        chat = master;
-    }
     for (const profile of file.profiles) {
-        chat === null || chat === void 0 ? void 0 : chat.sendMessage(`Started ${profile.email}`);
-        chat === null || chat === void 0 ? void 0 : chat.sendMessage(`Start Scrapping`);
+        io.sockets.emit(`message`, `${(0, time_1.getTime)()} Started ${profile.email}`);
+        io.sockets.emit(`message`, `${(0, time_1.getTime)()} Start Scrapping`);
         const page = yield client.pupBrowser.newPage();
-        const scrapper = new scrapper_1.Scrapper(page, profile, chat);
+        const scrapper = new scrapper_1.Scrapper(page, profile, io);
         yield scrapper.main();
         const cookie = yield page.target().createCDPSession();
         yield cookie.send('Network.clearBrowserCookies');
         yield page.close();
     }
 });
-let job;
-const setJob = () => __awaiter(void 0, void 0, void 0, function* () {
-    new cron_1.CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
+app.use(express_1.default.static(__dirname));
+app.get('/', (req, res) => {
+    res.sendFile('index.html', { root: __dirname });
 });
 const setup = () => __awaiter(void 0, void 0, void 0, function* () {
     yield client.initialize();
     yield client.pupBrowser
         .defaultBrowserContext()
         .overridePermissions('https://ocw.uns.ac.id', ['geolocation']);
-    setJob();
+    new cron_1.CronJob('0 */15 7-15 * * 1-5', main, null, true, 'Asia/Jakarta');
 });
 setup();
+io.on('connection', (socket) => {
+    socket.emit('message', `${(0, time_1.getTime)()} Connecting...`);
+    client.on('qr', (qr) => {
+        qrcode.toDataURL(qr, (err, url) => {
+            socket.emit('message', `${(0, time_1.getTime)()} Please Scan QRCode`);
+            socket.emit('qrcode', url);
+        });
+    });
+    client.on('ready', () => {
+        console.log('Client is ready');
+        socket.emit('message', `${(0, time_1.getTime)()} Client is ready!\n${(0, time_1.getTime)()} Client is ready!\n${(0, time_1.getTime)()} Client is ready!\n`);
+    });
+});
+server.listen(process.env.PORT || 5000, () => {
+    console.log('Server started');
+});
 //# sourceMappingURL=index.js.map
