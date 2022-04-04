@@ -21,8 +21,8 @@ const whitelistedNumber = '6281293586210|1234';
 const autoAbsen = '0 */15 7-15 * * 1-5';
 // https://crontab.cronhub.io/
 
-let summary = {};
 let master: Chat;
+let log: Chat;
 
 const app = express();
 const server = http.createServer(app);
@@ -53,6 +53,18 @@ client.on('message', async (message: Message) => {
       } else {
         message.reply(`Menambahkanmu sebagai master`);
         master = await message.getChat();
+      }
+    } else if (message.body === 'log') {
+      const newLog = await message.getChat();
+      if (!log) {
+        message.reply(`Menambahkanmu sebagai log`);
+        log = await message.getChat();
+      } else if (log.id.user == newLog.id.user) {
+        message.reply(`Menghapusmu dari log`);
+        log = null;
+      } else {
+        message.reply(`Menambahkanmu sebagai log`);
+        log = await message.getChat();
       }
     } else if (message.body === 'user form') {
       message.reply(
@@ -116,12 +128,12 @@ client.on('message', async (message: Message) => {
 const main = async (chat?: Chat) => {
   Profiles.readProfile();
   if (chat == null) {
-    chat = master;
+    chat = log;
   }
   for (const profile of Profiles.profiles) {
     const page = await client.pupBrowser.newPage();
 
-    const scrapper = new Scrapper(page, profile, io, chat);
+    const scrapper = new Scrapper(page, profile, io, chat, master);
 
     await scrapper.main();
 

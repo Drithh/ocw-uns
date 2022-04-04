@@ -12,11 +12,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Scrapper = void 0;
 const file_1 = require("./file");
 class Scrapper {
-    constructor(page, profile, io, chat) {
+    constructor(page, profile, io, chat, master) {
         this.page = page;
         this.profile = profile;
         this.io = io;
         this.chat = chat;
+        this.master = master;
         this.main = () => __awaiter(this, void 0, void 0, function* () {
             try {
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Started ${this.profile.email}`));
@@ -89,7 +90,7 @@ class Scrapper {
             }
         });
         this.absen = ([namaMataKuliah, linkKelas]) => __awaiter(this, void 0, void 0, function* () {
-            var _d, _e;
+            var _d, _e, _f, _g, _h;
             try {
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Mencari Link Absen ${namaMataKuliah}`));
                 const linkPresensi = yield this.findLinkAbsen(linkKelas);
@@ -112,13 +113,16 @@ class Scrapper {
                 yield this.page.goto('https://ocw.uns.ac.id/', {
                     waitUntil: 'networkidle0',
                 });
-                this.io.sockets.emit(`message`, file_1.Log.addLog(`${linkURL}`));
-                (_e = this.chat) === null || _e === void 0 ? void 0 : _e.sendMessage(`${linkURL}`);
                 file_1.Profiles.addSummary(this.profile.email, linkURL);
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Absen ${namaMataKuliah} Berhasil`));
+                (_e = this.chat) === null || _e === void 0 ? void 0 : _e.sendMessage(`Absen ${namaMataKuliah} Berhasil`);
+                this.io.sockets.emit(`message`, file_1.Log.addLog(`${linkURL}`));
+                (_f = this.chat) === null || _f === void 0 ? void 0 : _f.sendMessage(`${linkURL}`);
+                (_g = this.master) === null || _g === void 0 ? void 0 : _g.sendMessage(`${linkURL}`);
             }
             catch (error) {
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Gagal Absen ${this.profile.email}`));
+                (_h = this.chat) === null || _h === void 0 ? void 0 : _h.sendMessage(`Gagal Absen ${this.profile.email}`);
                 console.log(error);
             }
         });

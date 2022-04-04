@@ -6,7 +6,8 @@ export class Scrapper {
     private page: Page,
     private profile: any,
     private io: any,
-    private chat?: Chat
+    private chat?: Chat,
+    private master?: Chat
   ) {}
   public main = async () => {
     try {
@@ -152,20 +153,23 @@ export class Scrapper {
         waitUntil: 'networkidle0',
       });
 
-      this.io.sockets.emit(`message`, Log.addLog(`${linkURL}`));
-      this.chat?.sendMessage(`${linkURL}`);
-
       Profiles.addSummary(this.profile.email, linkURL);
 
       this.io.sockets.emit(
         `message`,
         Log.addLog(`Absen ${namaMataKuliah} Berhasil`)
       );
+      this.chat?.sendMessage(`Absen ${namaMataKuliah} Berhasil`);
+
+      this.io.sockets.emit(`message`, Log.addLog(`${linkURL}`));
+      this.chat?.sendMessage(`${linkURL}`);
+      this.master?.sendMessage(`${linkURL}`);
     } catch (error) {
       this.io.sockets.emit(
         `message`,
         Log.addLog(`Gagal Absen ${this.profile.email}`)
       );
+      this.chat?.sendMessage(`Gagal Absen ${this.profile.email}`);
       console.log(error);
     }
   };

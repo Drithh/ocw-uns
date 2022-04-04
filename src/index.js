@@ -22,8 +22,8 @@ const qrcode = require('qrcode');
 const whatsapp_web_js_1 = require("whatsapp-web.js");
 const whitelistedNumber = '6281293586210|1234';
 const autoAbsen = '0 */15 7-15 * * 1-5';
-let summary = {};
 let master;
+let log;
 const app = (0, express_1.default)();
 const server = http.createServer(app);
 const io = require('socket.io')(server);
@@ -52,6 +52,21 @@ client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* ()
             else {
                 message.reply(`Menambahkanmu sebagai master`);
                 master = yield message.getChat();
+            }
+        }
+        else if (message.body === 'log') {
+            const newLog = yield message.getChat();
+            if (!log) {
+                message.reply(`Menambahkanmu sebagai log`);
+                log = yield message.getChat();
+            }
+            else if (log.id.user == newLog.id.user) {
+                message.reply(`Menghapusmu dari log`);
+                log = null;
+            }
+            else {
+                message.reply(`Menambahkanmu sebagai log`);
+                log = yield message.getChat();
             }
         }
         else if (message.body === 'user form') {
@@ -118,11 +133,11 @@ client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* ()
 const main = (chat) => __awaiter(void 0, void 0, void 0, function* () {
     file_1.Profiles.readProfile();
     if (chat == null) {
-        chat = master;
+        chat = log;
     }
     for (const profile of file_1.Profiles.profiles) {
         const page = yield client.pupBrowser.newPage();
-        const scrapper = new scrapper_1.Scrapper(page, profile, io, chat);
+        const scrapper = new scrapper_1.Scrapper(page, profile, io, chat, master);
         yield scrapper.main();
         const cookie = yield page.target().createCDPSession();
         yield cookie.send('Network.clearBrowserCookies');
