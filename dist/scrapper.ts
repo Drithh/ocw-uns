@@ -15,7 +15,7 @@ export class Scrapper {
         `message`,
         Log.addLog(`Started ${this.profile.email}`)
       );
-
+      this.chat?.sendMessage(`Started ${this.profile.email}`);
       this.io.sockets.emit(`message`, Log.addLog(`Start Scrapping`));
       await this.login();
       await this.kuliahBerlangsung();
@@ -30,7 +30,6 @@ export class Scrapper {
         `message`,
         Log.addLog(`Mencoba Login ${this.profile.email}`)
       );
-      this.chat?.sendMessage(`Mencoba Login ${this.profile.email}`);
       const response = await this.page.goto(
         'https://ocw.uns.ac.id/saml/login',
         {
@@ -107,7 +106,7 @@ export class Scrapper {
           Log.addLog(`Tidak Terdapat Mata Kuliah Berlangsung`)
         );
         this.chat?.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
-        Profiles.addSummary(this.profile.email);
+        Profiles.addSummary(this.profile.email, 'test');
       }
     } catch (error) {
       this.io.sockets.emit(
@@ -152,9 +151,6 @@ export class Scrapper {
       await this.page.goto('https://ocw.uns.ac.id/', {
         waitUntil: 'networkidle0',
       });
-
-      Profiles.addSummary(this.profile.email, linkURL);
-
       this.io.sockets.emit(
         `message`,
         Log.addLog(`Absen ${namaMataKuliah} Berhasil`)
@@ -164,6 +160,7 @@ export class Scrapper {
       this.io.sockets.emit(`message`, Log.addLog(`${linkURL}`));
       this.chat?.sendMessage(`${linkURL}`);
       this.master?.sendMessage(`${linkURL}`);
+      Profiles.addSummary(this.profile.email, linkURL);
     } catch (error) {
       this.io.sockets.emit(
         `message`,

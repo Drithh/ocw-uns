@@ -94,6 +94,9 @@ Profiles.addSummary = (email, linkMeet) => __awaiter(void 0, void 0, void 0, fun
                 }
                 profile.summary.day = day;
                 profile.summary.lastLogin = time;
+                if (!profile.summary.links) {
+                    profile.summary.links = new Array();
+                }
                 if (linkMeet) {
                     profile.summary.links.push(linkMeet);
                 }
@@ -114,9 +117,9 @@ Profiles.getSummary = (email) => __awaiter(void 0, void 0, void 0, function* () 
         Profiles.profiles.forEach((profile) => {
             if (profile.email == email) {
                 if (profile.hasOwnProperty('summary')) {
-                    summaryText = `${profile.summary.day} Summary\nLogin Count: ${profile.summary.loginCount}\nLast Login: ${profile.summary.lastLogin}\n`;
+                    summaryText = `${profile.summary.day} Summary\nLogin Count: ${profile.summary.loginCount}\nLast Login: ${profile.summary.lastLogin}`;
                     if (profile.summary.hasOwnProperty('links')) {
-                        summaryText += `Link Meet: ${profile.summary.links.join('\n')}`;
+                        summaryText += `\nLink Meet: \n${profile.summary.links.join('\n')}`;
                     }
                 }
             }

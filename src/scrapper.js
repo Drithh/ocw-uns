@@ -19,8 +19,10 @@ class Scrapper {
         this.chat = chat;
         this.master = master;
         this.main = () => __awaiter(this, void 0, void 0, function* () {
+            var _a;
             try {
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Started ${this.profile.email}`));
+                (_a = this.chat) === null || _a === void 0 ? void 0 : _a.sendMessage(`Started ${this.profile.email}`);
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Start Scrapping`));
                 yield this.login();
                 yield this.kuliahBerlangsung();
@@ -30,10 +32,8 @@ class Scrapper {
             }
         });
         this.login = () => __awaiter(this, void 0, void 0, function* () {
-            var _a;
             try {
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Mencoba Login ${this.profile.email}`));
-                (_a = this.chat) === null || _a === void 0 ? void 0 : _a.sendMessage(`Mencoba Login ${this.profile.email}`);
                 const response = yield this.page.goto('https://ocw.uns.ac.id/saml/login', {
                     waitUntil: 'networkidle0',
                 });
@@ -81,7 +81,7 @@ class Scrapper {
                 else {
                     this.io.sockets.emit(`message`, file_1.Log.addLog(`Tidak Terdapat Mata Kuliah Berlangsung`));
                     (_c = this.chat) === null || _c === void 0 ? void 0 : _c.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
-                    file_1.Profiles.addSummary(this.profile.email);
+                    file_1.Profiles.addSummary(this.profile.email, 'test');
                 }
             }
             catch (error) {
@@ -113,12 +113,12 @@ class Scrapper {
                 yield this.page.goto('https://ocw.uns.ac.id/', {
                     waitUntil: 'networkidle0',
                 });
-                file_1.Profiles.addSummary(this.profile.email, linkURL);
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Absen ${namaMataKuliah} Berhasil`));
                 (_e = this.chat) === null || _e === void 0 ? void 0 : _e.sendMessage(`Absen ${namaMataKuliah} Berhasil`);
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`${linkURL}`));
                 (_f = this.chat) === null || _f === void 0 ? void 0 : _f.sendMessage(`${linkURL}`);
                 (_g = this.master) === null || _g === void 0 ? void 0 : _g.sendMessage(`${linkURL}`);
+                file_1.Profiles.addSummary(this.profile.email, linkURL);
             }
             catch (error) {
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`Gagal Absen ${this.profile.email}`));
