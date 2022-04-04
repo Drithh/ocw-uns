@@ -81,7 +81,7 @@ class Scrapper {
                 else {
                     this.io.sockets.emit(`message`, file_1.Log.addLog(`Tidak Terdapat Mata Kuliah Berlangsung`));
                     (_c = this.chat) === null || _c === void 0 ? void 0 : _c.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
-                    file_1.Profiles.addSummary(this.profile.email, 'test');
+                    file_1.Profiles.addSummary(this.profile.email);
                 }
             }
             catch (error) {

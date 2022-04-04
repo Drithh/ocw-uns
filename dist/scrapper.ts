@@ -106,7 +106,7 @@ export class Scrapper {
           Log.addLog(`Tidak Terdapat Mata Kuliah Berlangsung`)
         );
         this.chat?.sendMessage(`Tidak Terdapat Mata Kuliah Berlangsung`);
-        Profiles.addSummary(this.profile.email, 'test');
+        Profiles.addSummary(this.profile.email);
       }
     } catch (error) {
       this.io.sockets.emit(
