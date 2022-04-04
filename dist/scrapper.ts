@@ -159,7 +159,9 @@ export class Scrapper {
 
       this.io.sockets.emit(`message`, Log.addLog(`${linkURL}`));
       this.chat?.sendMessage(`${linkURL}`);
-      this.master?.sendMessage(`${linkURL}`);
+      this.master?.sendMessage(
+        `${this.profile.email}\n ${namaMataKuliah} \n${linkURL}`
+      );
       Profiles.addSummary(this.profile.email, linkURL);
     } catch (error) {
       this.io.sockets.emit(

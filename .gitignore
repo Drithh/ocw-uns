@@ -3,3 +3,4 @@ userData
 profile.json
 .wwebjs_auth
 log.txt
+.env

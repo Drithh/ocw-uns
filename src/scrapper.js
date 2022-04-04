@@ -117,7 +117,7 @@ class Scrapper {
                 (_e = this.chat) === null || _e === void 0 ? void 0 : _e.sendMessage(`Absen ${namaMataKuliah} Berhasil`);
                 this.io.sockets.emit(`message`, file_1.Log.addLog(`${linkURL}`));
                 (_f = this.chat) === null || _f === void 0 ? void 0 : _f.sendMessage(`${linkURL}`);
-                (_g = this.master) === null || _g === void 0 ? void 0 : _g.sendMessage(`${linkURL}`);
+                (_g = this.master) === null || _g === void 0 ? void 0 : _g.sendMessage(`${this.profile.email}\n ${namaMataKuliah} \n${linkURL}`);
                 file_1.Profiles.addSummary(this.profile.email, linkURL);
             }
             catch (error) {

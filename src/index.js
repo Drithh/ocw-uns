@@ -17,15 +17,16 @@ const scrapper_1 = require("./scrapper");
 const cron_1 = require("cron");
 const express_1 = __importDefault(require("express"));
 const util_1 = require("./util");
-const http = require('http');
-const qrcode = require('qrcode');
+const http_1 = __importDefault(require("http"));
+const qrcode_1 = __importDefault(require("qrcode"));
+require("dotenv/config");
 const whatsapp_web_js_1 = require("whatsapp-web.js");
-const whitelistedNumber = '6281293586210|1234';
-const autoAbsen = '0 */15 7-15 * * 1-5';
+const whitelistedNumber = process.env.WHITELIST;
+const autoAbsen = process.env.JOB;
 let master;
 let log;
 const app = (0, express_1.default)();
-const server = http.createServer(app);
+const server = http_1.default.createServer(app);
 const io = require('socket.io')(server);
 const client = new whatsapp_web_js_1.Client({
     puppeteer: {
@@ -164,7 +165,7 @@ io.on('connect', () => __awaiter(void 0, void 0, void 0, function* () {
 io.on('connection', (socket) => {
     socket.emit('message', file_1.Log.addLog(`Connecting...`));
     client.on('qr', (qr) => {
-        qrcode.toDataURL(qr, (err, url) => {
+        qrcode_1.default.toDataURL(qr, (err, url) => {
             socket.emit('message', file_1.Log.addLog(`Please Scan QRCode`));
             socket.emit('qrcode', url);
         });

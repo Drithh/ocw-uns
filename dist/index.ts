@@ -4,8 +4,10 @@ import { Scrapper } from './scrapper';
 import { CronJob } from 'cron';
 import express from 'express';
 import { addAccount, messageList, checkForm } from './util';
-const http = require('http');
-const qrcode = require('qrcode');
+import http from 'http';
+import qrcode from 'qrcode';
+import 'dotenv/config';
+
 import {
   Chat,
   ChatId,
@@ -15,11 +17,9 @@ import {
   Message,
 } from 'whatsapp-web.js';
 
-const whitelistedNumber = '6281293586210|1234';
-// gunakan '|' untuk memisahkan antara nomor satu dengna nomor lain
+const whitelistedNumber = process.env.WHITELIST;
 
-const autoAbsen = '0 */15 7-15 * * 1-5';
-// https://crontab.cronhub.io/
+const autoAbsen = process.env.JOB;
 
 let master: Chat;
 let log: Chat;
@@ -166,7 +166,7 @@ io.on('connect', async () => {
 
 io.on('connection', (socket: any) => {
   socket.emit('message', Log.addLog(`Connecting...`));
-  client.on('qr', (qr: QRCode) => {
+  client.on('qr', (qr: any) => {
     qrcode.toDataURL(qr, (err: any, url: string) => {
       socket.emit('message', Log.addLog(`Please Scan QRCode`));
       socket.emit('qrcode', url);
