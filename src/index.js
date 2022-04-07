@@ -36,7 +36,7 @@ const client = new whatsapp_web_js_1.Client({
     authStrategy: new whatsapp_web_js_1.LocalAuth(),
 });
 client.on('message', (message) => __awaiter(void 0, void 0, void 0, function* () {
-    if (new RegExp(whitelistedNumber).test(message.from.replace(/[^\d.]/g, ''))) {
+    if (new RegExp(whitelistedNumber).test(message.id._serialized.replace(/[^\d.]/g, ''))) {
         if (message.body === 'absen') {
             main(yield message.getChat());
         }

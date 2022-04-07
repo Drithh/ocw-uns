@@ -1,4 +1,3 @@
-import { QRCode } from 'jsqr';
 import { Profiles, Log } from './file';
 import { Scrapper } from './scrapper';
 import { CronJob } from 'cron';
@@ -38,8 +37,21 @@ const client = new Client({
   authStrategy: new LocalAuth(),
 });
 
+// const checkWhitelist = async (message: Message) => {
+//   const chat = await message.getChat();
+//   if (chat.isGroup) {
+//     chat.sendMessage('grup');
+//   } else {
+//     chat.sendMessage('bukan grup');
+//   }
+// };
+
 client.on('message', async (message: Message) => {
-  if (new RegExp(whitelistedNumber).test(message.from.replace(/[^\d.]/g, ''))) {
+  if (
+    new RegExp(whitelistedNumber).test(
+      message.id._serialized.replace(/[^\d.]/g, '')
+    )
+  ) {
     if (message.body === 'absen') {
       main(await message.getChat());
     } else if (message.body === 'master') {
